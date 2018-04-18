@@ -44,13 +44,14 @@
 
 	<body>
 		<div id="info">
-            OBJ loader with Three JS
+            OBJ loader with ThreeJS
 		</div>
         
         <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r61/three.min.js"></script>    
 		<script src="three/three.js"></script>
 		<script src="three/OBJ_loader.js"></script>
-        
+
+        <!-- Descreve vertex shader -->    
         <script id="vertexShader" type="x-shader/x-vertex">
             uniform float time;
             uniform vec2 resolution;
@@ -58,7 +59,8 @@
                 gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 	        }
         </script>
-
+        
+        <!-- Descreve fragment shader (Altera a cor do objeto) -->
         <script id="fragmentShader" type="x-shader/x-fragment">
             uniform float time;
             uniform vec2 resolution;
@@ -66,8 +68,6 @@
                 gl_FragColor = vec4(0.5, 0.7, 0.7, 1.0);
             }
         </script>
-        
-        
         
 		<script>
             var clock = new THREE.Clock();
@@ -92,23 +92,13 @@
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
 
+                //Cria camera
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
 				camera.position.z = 600;
                 
-				// Criar scene
-
+				//Cria scene
 				scene = new THREE.Scene();
-                
                 scene.background = new THREE.Color( 0x070528 );//cor do fundo da cena
-                
-                //Para questões de visualização adicionamos luz e cor
-                var ambient = new THREE.AmbientLight( 0x10105a );//Luz ambiente
-				scene.add( ambient );
-
-                //Adição de ponto de Luz
-                var directionalLight = new THREE.DirectionalLight( 0xffeedd );
-				directionalLight.position.set( 0, 0, 1 );
-				scene.add( directionalLight );
                 
                 var uniforms = {
                     time: { type: "f", value: 1.0 },
@@ -116,12 +106,12 @@
                 };
                 
                var material = new THREE.ShaderMaterial( {
-                   uniforms: uniforms,
+                    uniforms: uniforms,
                     vertexShader: document.getElementById( 'vertexShader' ).textContent,
                     fragmentShader: document.getElementById( 'fragmentShader' ).textContent
                 });
-                //var material = new THREE.MeshNormalMaterial( { vertexColors: THREE.FaceColors } );
-				// model
+               
+                //Carrega objeto .OBJ
 				var loader = new THREE.OBJLoader();
 				loader.load( 'OBJ/PORG.OBJ', function ( object ) {
                     
@@ -141,11 +131,13 @@
 				} );
                 
                 /*
-                Para o PORG.OBJ scale = 1
-                Para o Male.OBJ scale = 40
-                Para o ship.obj scale = 30
-                Para o book.obj scale = 80
-                
+                    Para o PORG.OBJ scale = 1
+                    Para o Male.OBJ scale = 40
+                    Para o ship.obj scale = 30
+                    Para o book.obj scale = 80
+                  
+                    Alterar para 5 valor de redimensionamento de escala para objetos - exceto PORG
+                    
                 */
 
 				renderer = new THREE.WebGLRenderer();
@@ -175,7 +167,6 @@
 
 			function animate() {
 				requestAnimationFrame( animate );
-              //  renderer.render( scene, camera );
 				render();
 			}
 
@@ -190,16 +181,16 @@
 				camera.lookAt( scene.position );
 
                 document.getElementById( "ScaleM" ).onclick = function () {
-                        obj.scale.x += 5;
-                        obj.scale.y += 5;
-                        obj.scale.z += 5;
+                        obj.scale.x += 0.5;
+                        obj.scale.y += 0.5;
+                        obj.scale.z += 0.5;
                 };
                 
                  document.getElementById( "ScaleL" ).onclick = function () {
-                    if (obj.scale.x > 5) {
-                        obj.scale.x -= 5;
-                        obj.scale.y -= 5;
-                        obj.scale.z -= 5;
+                    if (obj.scale.x > 0.5) {
+                        obj.scale.x -= 0.5;
+                        obj.scale.y -= 0.5;
+                        obj.scale.z -= 0.5;
                     }
                 };
              
