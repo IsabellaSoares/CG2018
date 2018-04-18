@@ -25,6 +25,7 @@
 				z-index: 100;
 				display:block;
 			}
+            /*Definição dos estilos dos btões */
 			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
             #ScaleM {
                 position: absolute;
@@ -47,8 +48,8 @@
 		</div>
         
         <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r61/three.min.js"></script>    
-		<script src="three.js"></script>
-		<script src="OBJ_loader.js"></script>
+		<script src="three/three.js"></script>
+		<script src="three/OBJ_loader.js"></script>
         
         <script id="vertexShader" type="x-shader/x-vertex">
             uniform float time;
@@ -95,12 +96,21 @@
 
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
 				camera.position.z = 600;
-
-				// scene
+                
+				// Criar scene
 
 				scene = new THREE.Scene();
-                scene.background = new THREE.Color( 0x070528 );
+                
+                scene.background = new THREE.Color( 0x070528 );//cor do fundo da cena
+                
+                //Para questões de visualização adicionamos luz e cor
+                var ambient = new THREE.AmbientLight( 0x10105a );//Luz ambiente
+				scene.add( ambient );
 
+                //Adição de ponto de Luz
+                var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 );
+				scene.add( directionalLight );
                 //carrega o loder obj
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
@@ -114,20 +124,25 @@
                     resolution: { type: "v2", value: new THREE.Vector2() }
                 };
                 
-                var material = new THREE.ShaderMaterial( {
-                   uniforms: uniforms,
-                    vertexShader: document.getElementById( 'vertexShader' ).textContent,
-                    fragmentShader: document.getElementById( 'fragmentShader' ).textContent
-                });
-                
+               // var material = new THREE.ShaderMaterial( {
+                  // uniforms: uniforms,
+                    //vertexShader: document.getElementById( 'vertexShader' ).textContent,
+                    //fragmentShader: document.getElementById( 'fragmentShader' ).textContent
+                //});
+                var material = new THREE.MeshNormalMaterial( { vertexColors: THREE.FaceColors } );
 				// model
 				var loader = new THREE.OBJLoader( manager, material );
-				loader.load( 'ship.obj', function ( object ) {
-					object.position.x = - 60;
-                    object.scale.x = 30;
-                    object.scale.y = 30;
-                    object.scale.z = 30;
+				loader.load( 'OBJ/book.obj', function ( object ) {
                     
+                   object.traverse( function ( child ) {    // para colocar cor no objeto
+                        if ( child instanceof THREE.Mesh )
+                            child.material.color.setHex (0x8c0000);
+                        });
+
+                    object.position.x = - 60;
+                    object.scale.x = 80;
+                    object.scale.y = 80;
+                    object.scale.z = 80;
                     obj = object;
 					scene.add( obj );
 
@@ -137,6 +152,7 @@
                 Para o PORG.OBJ scale = 1
                 Para o Male.OBJ scale = 40
                 Para o ship.obj scale = 30
+                Para o book.obj scale = 80
                 
                 */
 
@@ -172,6 +188,7 @@
 			}
 
 			function render() {
+               
                 obj.rotation.x += (0.2*(Math.PI / 180));
                 obj.rotation.x %=360;
                 
