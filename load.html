@@ -25,18 +25,22 @@
 				z-index: 100;
 				display:block;
 			}
-            /*Definição dos estilos dos btões */
+            /*Definição dos estilos dos botões */
 			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
             #ScaleM {
                 position: absolute;
-                bottom: 90px;
+                bottom: 120px;
                 left: 40px;
+				font-size: 20px;
+				width: 100px;
             }
             
             #ScaleL{
                 position: absolute;
-                bottom: 120px;
+                bottom: 80px;
                 left: 40px;
+				font-size: 20px;
+				width: 100px;
             }
             
 		</style>
@@ -75,9 +79,9 @@
             var rotateAngle = Math.PI / 2 * delta;   // pi/2 radians (90 degrees) per second
 			var container, stats;
 
-			var camera, scene, renderer;
+			var camera, scene, renderer; //necessário para vizualização
 
-			var mouseX = 0, mouseY = 0;
+			var mouseX = 0, mouseY = 0; //inicializa a posição do mouse
 
 			var windowHalfX = window.innerWidth / 2;
 			var windowHalfY = window.innerHeight / 2;
@@ -121,21 +125,24 @@
                             child.material = material;
                         });
 
+					/*
+						Alterar as escalas (x,y,z) para valores correspondentes com o objeto pela lista abaixo:
+						
+						Para o PORG.OBJ scale = 1
+						Para o Male.OBJ scale = 40
+						Para o ship.obj scale = 30
+						Para o book.obj scale = 80
+					*/
                     object.position.x = - 60;
                     object.scale.x = 1;
                     object.scale.y = 1;
                     object.scale.z = 1;
                     obj = object;
-					scene.add( obj );
+					scene.add( obj ); //coloca o objeto na cena
 
 				} );
                 
-                /*
-                    Para o PORG.OBJ scale = 1
-                    Para o Male.OBJ scale = 40
-                    Para o ship.obj scale = 30
-                    Para o book.obj scale = 80
-                  
+                /*                  
                     Alterar para 5 valor de redimensionamento de escala para objetos - exceto PORG
                     
                 */
@@ -150,6 +157,7 @@
 
 			}
 
+			//Adapta cenário e vizualização de acordo com o tamanho da janela
 			function onWindowResize() {
 				windowHalfX = window.innerWidth / 2;
 				windowHalfY = window.innerHeight / 2;
@@ -160,9 +168,10 @@
 				renderer.setSize( window.innerWidth, window.innerHeight );
 			}
 
+			//Define o escalar para a movimentação do mouse, usada posteriormente com a câmera
 			function onDocumentMouseMove( event ) {
-				mouseX = ( event.clientX - windowHalfX ) / 2;
-				mouseY = ( event.clientY - windowHalfY ) / 2;
+				mouseX = ( event.clientX - windowHalfX );
+				mouseY = ( event.clientY - windowHalfY );
 			}
 
 			function animate() {
@@ -172,14 +181,18 @@
 
 			function render() {
                
+				//implementa a rotação automática do objeto em seu próprio eixo
                 obj.rotation.x += (0.2*(Math.PI / 180));
                 obj.rotation.x %=360;
                 
-				camera.position.x += ( mouseX - camera.position.x ) * .05;
-				camera.position.y += ( - mouseY - camera.position.y ) * .05;
+				//adapta a visão da câmera de acordo com a posição do mouse
+				camera.position.x += ( mouseX - camera.position.x ) * .5;
+				camera.position.y += ( - mouseY - camera.position.y ) * .5;
 
 				camera.lookAt( scene.position );
 
+				/*Define o quanto aumentará ou diminuirá a escala ao apertar os botões
+				com tal função */
                 document.getElementById( "ScaleM" ).onclick = function () {
                         obj.scale.x += 0.5;
                         obj.scale.y += 0.5;
