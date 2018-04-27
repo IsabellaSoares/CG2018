@@ -59,8 +59,25 @@
         <script id="vertexShader" type="x-shader/x-vertex">
             uniform float time;
             uniform vec2 resolution;
+  
+ 
+
+            varying vec2 vUv;
+           varying mat4 vPosition;
+
             void main()	{
-                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+             vUv = uv;
+      
+              // Translate
+              mat4 tPos = mat4(vec4(1.0,0.0,0.0,0.0),
+                               vec4(0.0,1.0,0.0,0.0),
+                               vec4(0.0,0.0,1.0,0.0),
+                               vec4(100.0,100.0,0.0,1.0));
+
+
+
+                vPosition =  tPos;
+                gl_Position = projectionMatrix * modelViewMatrix * vPosition * vec4( position, 1.0 );
 	        }
         </script>
         
@@ -104,25 +121,33 @@
 				scene = new THREE.Scene();
                 scene.background = new THREE.Color( 0x070528 );//cor do fundo da cena
                 
+                var ambient = new THREE.AmbientLight( 0x10105a );
+				scene.add( ambient );
+
+                //não era pra colocar luz, mas fica muito feio sem
+                var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 );
+				scene.add( directionalLight );
+                
                 var uniforms = {
                     time: { type: "f", value: 1.0 },
                     resolution: { type: "v2", value: new THREE.Vector2() }
                 };
                 
-               var material = new THREE.ShaderMaterial( {
-                    uniforms: uniforms,
+              // var material = new THREE.ShaderMaterial( {
+                //    uniforms: uniforms,
                     vertexShader: document.getElementById( 'vertexShader' ).textContent,
                     fragmentShader: document.getElementById( 'fragmentShader' ).textContent
                 });
                
                 //Carrega objeto .OBJ
 				var loader = new THREE.OBJLoader();
-				loader.load( 'OBJ/PORG.OBJ', function ( object ) {
+				loader.load( 'OBJ/deathstar-.obj', function ( object ) {
                     
                    object.traverse( function ( child ) {    // para colocar cor no objeto
                         if ( child instanceof THREE.Mesh )
-                            child.material.color.setHex (0x8c0000);
-                            child.material = material;
+                           // child.material.color.setHex (0x8c0000);
+                            //child.material = material;
                         });
 
 					/*
@@ -182,12 +207,12 @@
 			function render() {
                
 				//implementa a rotação automática do objeto em seu próprio eixo
-                obj.rotation.x += (0.2*(Math.PI / 180));
-                obj.rotation.x %=360;
+                //obj.rotation.x += (0.2*(Math.PI / 180));
+                //obj.rotation.x %=360;
                 
 				//adapta a visão da câmera de acordo com a posição do mouse
-				camera.position.x += ( mouseX - camera.position.x ) * .5;
-				camera.position.y += ( - mouseY - camera.position.y ) * .5;
+				//camera.position.x += ( mouseX - camera.position.x ) * .5;
+				//camera.position.y += ( - mouseY - camera.position.y ) * .5;
 
 				camera.lookAt( scene.position );
 
