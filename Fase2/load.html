@@ -6,8 +6,9 @@
 		<title>OBJloader</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <button id= "ScaleM">Scale + Darth Vader </button>
-        <button id= "ScaleL">Scale - Darth Vader </button>
+        <button id= "ScaleM">Scale + Darth Star </button>
+        <button id= "ScaleL">Scale - Darth Star </button>
+        <input id="range" type="range" min="-200" max="230" value="0">
 		<style>
 			body {
 				font-family: Monospace;
@@ -31,7 +32,7 @@
                 position: absolute;
                 bottom: 120px;
                 left: 40px;
-				font-size: 10px;
+				font-size: 12px;
 				width: 100px;
             }
             
@@ -39,10 +40,16 @@
                 position: absolute;
                 bottom: 80px;
                 left: 40px;
-				font-size: 10px;
+				font-size: 12px;
 				width: 100px;
             }
-            
+            #range{
+                position: absolute;
+                bottom: 100px;
+                left: 520px;
+				font-size: 12px;
+				width: 100px;
+            }
 		</style>
 	</head>
 
@@ -206,6 +213,10 @@
                 
                 var ambient = new THREE.AmbientLight( 0x10105a );
 				scene.add( ambient );
+            
+                var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 );
+				scene.add( directionalLight );
                 
                 //Shader para Death Star
                 var material_deathstar = new THREE.ShaderMaterial( {
@@ -233,15 +244,27 @@
                 
                 
                 //Carrega Darth Vader
-				var loader = new THREE.OBJLoader();
+				/*var loader = new THREE.OBJLoader();
 				loader.load( '../OBJ/vader.obj', function ( object ) {
-                    
+
                 object.traverse( function ( child ) {    
                     if ( child instanceof THREE.Mesh )
                         child.material = material_vader;
                     });
                     darth_vader = object;
 					scene.add( darth_vader ); //coloca o objeto na cena
+				} );*/
+                var loader = new THREE.OBJLoader();
+				loader.load( '../OBJ/vader.obj', function ( object ) {
+
+					object.position.x = -50;
+                    object.position.y = -90;
+                    object.scale.x = 30;
+                    object.scale.y = 30;
+                    object.scale.z = 30;
+                    darth_vader = object
+					scene.add( darth_vader );
+
 				} );
      
 				renderer = new THREE.WebGLRenderer();
@@ -272,21 +295,33 @@
                 
                 /* Rotação para Escala Estrela da Morte usando função pronta do three.js */
                 death_star.rotation.y += .0009;
-                
+               
                 /* Botões para Escala Darth Vader usando função pronta do three.js */
                 document.getElementById( "ScaleM" ).onclick = function () {
-                        darth_vader.scale.x += 0.5;
-                        darth_vader.scale.y += 0.5;
-                        darth_vader.scale.z += 0.5;
+                        death_star.scale.x += 0.5;
+                        death_star.scale.y += 0.5;
+                        death_star.scale.z += 0.5;
                 };
                 
                  document.getElementById( "ScaleL" ).onclick = function () {
-                    if (darth_vader.scale.x > 0.5) {
-                        darth_vader.scale.x -= 0.5;
-                        darth_vader.scale.y -= 0.5;
-                        darth_vader.scale.z -= 0.5;
+                    if (death_star.scale.x > 0.5) {
+                        death_star.scale.x -= 0.5;
+                        death_star.scale.y -= 0.5;
+                        death_star.scale.z -= 0.5;
                     }
                 };
+               
+                document.getElementById( "range" ).onchange = function () {
+                    darth_vader.scale.x = 30;
+                    darth_vader.scale.y = 30;
+                    darth_vader.scale.z = 30;
+                    darth_vader.scale.x += document.getElementById( "range" ).value/10;
+                    darth_vader.scale.y += document.getElementById( "range" ).value/10;
+                    darth_vader.scale.z += document.getElementById( "range" ).value/10;
+                    
+                };
+                
+                
 				renderer.render( scene, camera );
 			}
 		</script>
