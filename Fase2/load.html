@@ -1,14 +1,20 @@
 <!-- Adapted from https://bl.ocks.org/chrisbrasington and https://gist.github.com/kylemcdonald/9593057 -->
 <!-- Transformations matrix adapted from https://gist.github.com/jeanlescure/e27c93b73a10b64e85e4 -->
+
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<title>OBJloader</title>
 		<meta charset="utf-8">
+        
+        <!-- Botões usados na escala do objeto Death Star-->
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <button id= "ScaleM">Scale + Darth Star </button>
-        <button id= "ScaleL">Scale - Darth Star </button>
+        <button id= "ScaleM">Scale + <br>Death Star </button>
+        <button id= "ScaleL">Scale - <br>Death Star </button>
+        
+        <!-- Input Range usado na escala do objeto Vader-->
         <input id="range" type="range" min="-200" max="230" value="0">
+        
 		<style>
 			body {
 				font-family: Monospace;
@@ -65,6 +71,7 @@
         <!-- Descreve vertex shader para Death Star -->    
         <script id="vertexShaderDS" type="x-shader/x-vertex">
             
+            //Escalares usados nas matrizes de tranformação
             float translationX = 310.0;
             float translationY = 110.0;
             float translationZ = -20.0;
@@ -75,7 +82,7 @@
             float rotationY = 0.0;
             float rotationZ = 0.0;
             
-            varying vec2 vUv;
+            //variavel para matriz de tranformação
             varying mat4 mTransformation;
             
             void main()	{
@@ -107,8 +114,11 @@
                                     vec4(0.0, scaleY, 0.0, 0.0),
                                     vec4(0.0, 0.0, scaleZ, 0.0),
                                     vec4(0.0, 0.0, 0.0, 1.0));
-
+                                    
+                //Matriz final de tranformação
                 mTransformation =  tPos * rXPos * rZPos * rYPos * sPos;
+                
+                //Aplicação da matriz de tranformação e posicionamento do objeto
                 gl_Position = projectionMatrix * modelViewMatrix * mTransformation * vec4( position, 1.0 );
 	        }
             
@@ -127,7 +137,8 @@
         
         <!-- Descreve vertex shader para Darth Vader -->    
         <script id="vertexShaderDV" type="x-shader/x-vertex">
-            uniform float time;
+            
+            //Escalares usados nas matrizes de tranformação
             float translationX = -100.0;
             float translationY = -70.0;
             float translationZ = 0.0;
@@ -138,7 +149,7 @@
             float rotationY = 0.0;
             float rotationZ = 0.0;
             
-            varying vec2 vUv;
+            //variavel para armazenar matriz final de transformação
             varying mat4 mTransformation;
             
             void main()	{
@@ -171,8 +182,12 @@
                                     vec4(0.0, scaleY, 0.0, 0.0),
                                     vec4(0.0, 0.0, scaleZ, 0.0),
                                     vec4(0.0, 0.0, 0.0, 1.0));
-
+                
+                //matriz final de tranformação
+                
                 mTransformation =  tPos * rXPos * rZPos * rYPos * sPos;
+                
+                //Aplicação da matriz de tranformação e posicionamento do objeto
                 gl_Position = projectionMatrix * modelViewMatrix * mTransformation * vec4( position, 1.0 );
 	        }
         </script>
@@ -207,10 +222,12 @@
 				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
 				camera.position.z = 600;
                 
-				//Cria scene
+				//Cria cenário
 				scene = new THREE.Scene();
                 scene.background = new THREE.Color( 0x070528 );//cor do fundo da cena
                 
+                
+                //aplicailuminação do cenário e para visualização da cena
                 var ambient = new THREE.AmbientLight( 0x10105a );
 				scene.add( ambient );
             
@@ -218,13 +235,13 @@
 				directionalLight.position.set( 0, 0, 1 );
 				scene.add( directionalLight );
                 
-                //Shader para Death Star
+                //Aplicação dos shaders para Death Star
                 var material_deathstar = new THREE.ShaderMaterial( {
                     vertexShader: document.getElementById( 'vertexShaderDS' ).textContent,
                     fragmentShader: document.getElementById( 'fragmentShaderDS' ).textContent
                 });
                 
-                //Shader para Darth Vader
+                //Aplicação dos shaders para Darth Vader
                 var material_vader = new THREE.ShaderMaterial( {
                     vertexShader: document.getElementById( 'vertexShaderDV' ).textContent,
                     fragmentShader: document.getElementById( 'fragmentShaderDV' ).textContent
@@ -270,6 +287,8 @@
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
+                
+            //  linhas de código para movimentação do mouse influenciar camera
 			//	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 			//	window.addEventListener( 'resize', onWindowResize, false );
 			}
@@ -282,11 +301,14 @@
 				camera.updateProjectionMatrix();
 				renderer.setSize( window.innerWidth, window.innerHeight );
 			}
+            
+            /*
 			//Define o escalar para a movimentação do mouse, usada posteriormente com a câmera
 			function onDocumentMouseMove( event ) {
 				mouseX = ( event.clientX - windowHalfX );
 				mouseY = ( event.clientY - windowHalfY );
-			}
+			}*/
+            
 			function animate() {
 				requestAnimationFrame( animate );
 				render();
@@ -321,7 +343,7 @@
                     
                 };
                 
-                
+                //renderização final da câmera
 				renderer.render( scene, camera );
 			}
 		</script>
