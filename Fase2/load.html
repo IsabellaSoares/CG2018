@@ -320,12 +320,14 @@
                
                 /* Botões para Escala Darth Vader usando função pronta do three.js */
                 document.getElementById( "ScaleM" ).onclick = function () {
+                    if(death_star.scale.x < 2.0){
                         death_star.scale.x += 0.5;
                         death_star.scale.y += 0.5;
                         death_star.scale.z += 0.5;
+                    }
                 };
                 
-                 document.getElementById( "ScaleL" ).onclick = function () {
+                document.getElementById( "ScaleL" ).onclick = function () {
                     if (death_star.scale.x > 0.5) {
                         death_star.scale.x -= 0.5;
                         death_star.scale.y -= 0.5;
