@@ -1,0 +1,375 @@
+<!-- Adapted from https://bl.ocks.org/chrisbrasington and https://gist.github.com/kylemcdonald/9593057 -->
+<!-- Transformations matrix adapted from https://gist.github.com/jeanlescure/e27c93b73a10b64e85e4 -->
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>OBJloader</title>
+		<meta charset="utf-8">
+        
+        <!-- Botões usados na escala do objeto Death Star-->
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <button id= "ScaleM">Scale + <br>Death Star </button>
+        <button id= "ScaleL">Scale - <br>Death Star </button>
+        
+        <!-- Input Range usado na escala do objeto Vader-->
+        <input id="range" type="range" min="-200" max="230" value="0">
+        
+		<style>
+			body {
+				font-family: Monospace;
+				background-color: #fff;
+				color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+            /*Definição dos estilos dos botões */
+			#info a, .button { color: #f00; font-weight: bold; text-decoration: underline; cursor: pointer }
+            #ScaleM {
+                position: absolute;
+                bottom: 120px;
+                left: 40px;
+				font-size: 12px;
+				width: 100px;
+            }
+            
+            #ScaleL{
+                position: absolute;
+                bottom: 80px;
+                left: 40px;
+				font-size: 12px;
+				width: 100px;
+            }
+            #range{
+                position: absolute;
+                bottom: 100px;
+                left: 520px;
+				font-size: 12px;
+				width: 100px;
+            }
+		</style>
+	</head>
+
+	<body id = "corpo">
+		<div id="info">
+            OBJ loader with ThreeJS
+		</div>
+        
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r61/three.min.js"></script>    
+		<script src="../three/three.js"></script>
+		<script src="../three/OBJ_loader.js"></script>
+
+        <!-- Descreve vertex shader para Death Star -->    
+        <script id="vertexShaderDS" type="x-shader/x-vertex">
+            
+            //Escalares usados nas matrizes de tranformação
+            float translationX = 310.0;
+            float translationY = 110.0;
+            float translationZ = -20.0;
+            float scaleX = 0.25;
+            float scaleY = 0.25;
+            float scaleZ = 0.25;
+            float rotationX = 0.0;
+            float rotationY = 0.0;
+            float rotationZ = 0.0;
+            
+            //variavel para matriz de tranformação
+            varying mat4 mTransformation;
+            
+            void main()	{
+                
+                // Translação
+                mat4 tPos = mat4(   vec4(1.0, 0.0, 0.0, 0.0),
+                                    vec4(0.0, 1.0, 0.0, 0.0),
+                                    vec4(0.0, 0.0, 1.0, 0.0),
+                                    vec4(translationX, translationY, translationZ, 1.0));
+                //Rotação
+                //Eixo X
+                mat4 rXPos = mat4(  vec4(1.0, 0.0, 0.0, 0.0),
+                                    vec4(0.0, cos(rotationX), -sin(rotationX), 0.0),
+                                    vec4(0.0, sin(rotationX), cos(rotationX) ,0.0),
+                                    vec4(0.0, 0.0, 0.0, 1.0));
+                //Eixo Y
+                mat4 rYPos = mat4(  vec4(cos(rotationY), 0.0, sin(rotationY), 0.0),
+                                    vec4(0.0, 1.0, 0.0, 0.0),
+                                    vec4(-sin(rotationY), 0.0, cos(rotationY), 0.0),
+                                    vec4(0.0, 0.0, 0.0, 1.0));
+                //Eixo Z
+                mat4 rZPos = mat4(  vec4(cos(rotationZ), -sin(rotationZ), 0.0, 0.0),
+                                    vec4(sin(rotationZ), cos(rotationZ), 0.0, 0.0),
+                                    vec4(0.0, 0.0, 1.0, 0.0),
+                                    vec4(0.0, 0.0, 0.0, 1.0));
+
+                //Escala
+                mat4 sPos = mat4(   vec4(scaleX, 0.0, 0.0, 0.0),
+                                    vec4(0.0, scaleY, 0.0, 0.0),
+                                    vec4(0.0, 0.0, scaleZ, 0.0),
+                                    vec4(0.0, 0.0, 0.0, 1.0));
+                                    
+                //Matriz final de tranformação
+                mTransformation =  tPos * rXPos * rZPos * rYPos * sPos;
+                
+                //Aplicação da matriz de tranformação e posicionamento do objeto
+                gl_Position = projectionMatrix * modelViewMatrix * mTransformation * vec4( position, 1.0 );
+	        }
+            
+        </script>
+        
+        <!-- Descreve Fragment Shader para Death Star (Altera a cor do objeto) -->
+        <script id="fragmentShaderDS" type="x-shader/x-fragment">
+            uniform float time;
+            uniform vec2 resolution;
+            void main()	{
+            
+                gl_FragColor = vec4(0.153, 0.102, 0.255, 1.0);
+                
+            }
+        </script>
+        
+        <!-- Descreve vertex shader para Darth Vader -->    
+        <script id="vertexShaderDV" type="x-shader/x-vertex">
+            
+            //Escalares usados nas matrizes de tranformação
+            float translationX = -100.0;
+            float translationY = -70.0;
+            float translationZ = 0.0;
+            float scaleX = 35.0;
+            float scaleY = 35.0;
+            float scaleZ = 35.0;
+            float rotationX = 0.0;
+            float rotationY = 0.0;
+            float rotationZ = 0.0;
+            
+            //variavel para armazenar matriz final de transformação
+            varying mat4 mTransformation;
+            
+            void main()	{
+                
+                // Translação
+                mat4 tPos = mat4(   vec4(1.0, 0.0, 0.0, 0.0),
+                                    vec4(0.0, 1.0, 0.0, 0.0),
+                                    vec4(0.0, 0.0, 1.0, 0.0),
+                                    vec4(translationX, translationY, translationZ, 1.0));
+
+                //Rotação
+                //Eixo X
+                mat4 rXPos = mat4(  vec4(1.0, 0.0, 0.0, 0.0),
+                                    vec4(0.0, cos(rotationX), -sin(rotationX), 0.0),
+                                    vec4(0.0, sin(rotationX), cos(rotationX) ,0.0),
+                                    vec4(0.0, 0.0, 0.0, 1.0));
+                //Eixo Y
+                mat4 rYPos = mat4(  vec4(cos(rotationY), 0.0, sin(rotationY), 0.0),
+                                    vec4(0.0, 1.0, 0.0, 0.0),
+                                    vec4(-sin(rotationY), 0.0, cos(rotationY), 0.0),
+                                    vec4(0.0, 0.0, 0.0, 1.0));
+                //Eixo Z
+                mat4 rZPos = mat4(  vec4(cos(rotationZ), -sin(rotationZ), 0.0, 0.0),
+                                    vec4(sin(rotationZ), cos(rotationZ), 0.0, 0.0),
+                                    vec4(0.0, 0.0, 1.0, 0.0),
+                                    vec4(0.0, 0.0, 0.0, 1.0));
+
+                //Escala
+                mat4 sPos = mat4(   vec4(scaleX, 0.0, 0.0, 0.0),
+                                    vec4(0.0, scaleY, 0.0, 0.0),
+                                    vec4(0.0, 0.0, scaleZ, 0.0),
+                                    vec4(0.0, 0.0, 0.0, 1.0));
+                
+                //matriz final de tranformação
+                
+                mTransformation =  tPos * rXPos * rZPos * rYPos * sPos;
+                
+                //Aplicação da matriz de tranformação e posicionamento do objeto
+                gl_Position = projectionMatrix * modelViewMatrix * mTransformation * vec4( position, 1.0 );
+	        }
+        </script>
+        
+        <!-- Descreve Fragment Shader para Darth Vader (Altera a cor do objeto) -->
+        <script id="fragmentShaderDV" type="x-shader/x-fragment">
+            uniform float time;
+            uniform vec2 resolution;
+            void main()	{
+            
+                gl_FragColor = vec4(0.2, 0.05, 0.2, 1.0);
+                
+            }
+        </script>
+        
+		<script>
+            var clock = new THREE.Clock();
+            var delta = clock.getDelta(); // seconds.
+            var rotateAngle = Math.PI / 2 * delta;   // pi/2 radians (90 degrees) per second
+			var container, stats;
+			var camera, scene, renderer; //necessário para vizualização
+			var mouseX = 0, mouseY = 0; //inicializa a posição do mouse
+			var windowHalfX = window.innerWidth / 2;
+			var windowHalfY = window.innerHeight / 2;
+            
+			init();
+			animate();
+			function init() {
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+                //Cria camera
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+       camera2 = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+      camera2.position.z = 100;
+				camera.position.z = 600;
+                
+				//Cria cenário
+				scene = new THREE.Scene();
+                scene.background = new THREE.Color( 0x070528 );//cor do fundo da cena
+                
+                
+    //aplica iluminação do cenário e para visualização da cena
+    var ambient = new THREE.AmbientLight( 0x10105a );
+				scene.add( ambient );
+            
+                var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 );
+				scene.add( directionalLight );
+                
+                //Aplicação dos shaders para Death Star
+                var material_deathstar = new THREE.ShaderMaterial( {
+                    vertexShader: document.getElementById( 'vertexShaderDS' ).textContent,
+                    fragmentShader: document.getElementById( 'fragmentShaderDS' ).textContent
+                });
+                
+                //Aplicação dos shaders para Darth Vader
+                var material_vader = new THREE.ShaderMaterial( {
+                    vertexShader: document.getElementById( 'vertexShaderDV' ).textContent,
+                    fragmentShader: document.getElementById( 'fragmentShaderDV' ).textContent
+                });
+                
+                //Carrega Death Star
+				            var loader = new THREE.OBJLoader();
+				            loader.load( '../OBJ/deathstar-.obj', function ( object ) {
+                object.traverse( function ( child ) {    
+                if ( child instanceof THREE.Mesh )
+                    child.material = material_deathstar;
+                });
+                    death_star = object;
+                    scene.add( death_star ); //coloca o objeto na cena
+				            } );
+    
+    var loader = new THREE.OBJLoader();
+				loader.load( '../OBJ/vader.obj', function ( object ) {
+
+				object.position.x = -50;
+    object.position.y = -90;
+    object.scale.x = 20;
+    object.scale.y = 20;
+    object.scale.z = 20;
+    darth_vader = object
+				scene.add( darth_vader );
+
+				} );
+       
+
+    var loader = new THREE.OBJLoader();
+				loader.load( '../OBJ/falcon.obj', function ( object ) {
+
+				object.position.x = -250;
+    object.position.y = 90;
+    object.scale.x = 0.01;
+    object.scale.y = 0.01;
+    object.scale.z = 0.01;
+    object.rotation.z = 90;
+    falcon = object
+					scene.add( falcon );
+
+				} );
+       
+       var loader = new THREE.OBJLoader();
+				loader.load( '../OBJ/r2d2.obj', function ( object ) {
+
+				object.position.x = -50;
+    object.position.y = 90;
+    object.scale.x = 1;
+    object.scale.y = 1;
+    object.scale.z = 1;
+    r2d2 = object
+					scene.add( r2d2 );
+
+				} );   
+     
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+                
+    //  linhas de código para movimentação do mouse influenciar camera
+			//	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+			//	window.addEventListener( 'resize', onWindowResize, false );
+			}
+            
+			//Adapta cenário e vizualização de acordo com o tamanho da janela
+			function onWindowResize() {
+				windowHalfX = window.innerWidth / 2;
+				windowHalfY = window.innerHeight / 2;
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+        
+            
+			function animate() {
+				requestAnimationFrame( animate );   
+				render();
+			}
+			function render() {
+                
+                /* Rotação para Escala Estrela da Morte usando função pronta do three.js */
+                death_star.rotation.y += .0009;
+               
+                /* Botões para Escala Darth Vader usando função pronta do three.js */
+                document.getElementById( "ScaleM" ).onclick = function () {
+                    if(death_star.scale.x < 2.0){
+                        death_star.scale.x += 0.5;
+                        death_star.scale.y += 0.5;
+                        death_star.scale.z += 0.5;
+                    }
+                };
+                
+                document.getElementById( "ScaleL" ).onclick = function () {
+                    if (death_star.scale.x > 0.5) {
+                        death_star.scale.x -= 0.5;
+                        death_star.scale.y -= 0.5;
+                        death_star.scale.z -= 0.5;
+                    }
+                };
+               
+                document.getElementById( "range" ).onchange = function () {
+                    darth_vader.scale.x = 30;
+                    darth_vader.scale.y = 30;
+                    darth_vader.scale.z = 30;
+                    darth_vader.scale.x += document.getElementById( "range" ).value/10;
+                    darth_vader.scale.y += document.getElementById( "range" ).value/10;
+                    darth_vader.scale.z += document.getElementById( "range" ).value/10;
+                    
+                };
+                
+                document.getElementById("corpo").onkeypress = function (e) {
+                     var keyCode = e.keyCode;
+                        if(keyCode == 32) {
+                            renderer.render(scene, camera2);
+                            return;
+                        }
+                }
+       
+                //renderização final da câmera
+                renderer.render( scene, camera );
+                
+			}
+
+
+		</script>
+	</body>
+</html>
