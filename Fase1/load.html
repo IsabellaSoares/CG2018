@@ -105,7 +105,7 @@
                
                 //Carrega objeto .OBJ
 				var loader = new THREE.OBJLoader();
-				loader.load( '../OBJ/PORG.OBJ', function ( object ) {
+				loader.load( '../OBJ/millenium-falcon.obj', function ( object ) {
                     
                    object.traverse( function ( child ) {    // para colocar cor no objeto
                         if ( child instanceof THREE.Mesh )
@@ -113,9 +113,9 @@
                             child.material = material;
                         });
                     object.position.x = - 60;
-                    object.scale.x = 1;
-                    object.scale.y = 1;
-                    object.scale.z = 1;
+                    object.scale.x = 1000;
+                    object.scale.y = 1000;
+                    object.scale.z = 1000;
                     obj = object;
 					scene.add( obj );
 				} );
