@@ -14,7 +14,8 @@
         <button id= "ScaleL">Scale - <br>Death Star </button>
 -->
         <!-- Input Range usado na escala do objeto Vader-->
-        <input id="range" type="range" min="-200" max="230" value="0">
+     <!--BOTÃO RANGE PAROU DE FUNCIONAR KKKKKKK -->
+<!--     <input id="range" type="range" min="-200" max="230" value="0">-->
         
 		<style>
 			body {
@@ -35,14 +36,14 @@
 			}
     
       /*Definição dos estilos dos botões */			
-    #range{
+   /* #range{
         position: absolute;
         bottom: 100px;
         left: 520px;
         font-size: 12px;
         width: 100px;
     }
-
+*/
     #footer { 
         width:100%;
         position: absolute;
@@ -164,7 +165,7 @@
                 vNormal = normalMatrix * normal;
                 
                 //Aplicação da matriz de tranformação e posicionamento do objeto
-                gl_Position = projectionMatrix * viewMatrix * mTransformation * vec4( position, 1.0 );
+                gl_Position = projectionMatrix * modelViewMatrix * mTransformation * vec4( position, 1.0 );
 	        }
         </script>
         
@@ -322,15 +323,15 @@ function render() {
     /* Rotação para Escala Estrela da Morte usando função pronta do three.js */
     death_star.rotation.y += 0.02;
 
-    document.getElementById( "range" ).onchange = function () {
+   /* document.getElementById( "range" ).onchange = function () {
         darth_vader.scale.x = 55;
         darth_vader.scale.y = 55;
         darth_vader.scale.z = 55;
-       /* darth_vader.scale.x += document.getElementById( "range" ).value/10;
+        darth_vader.scale.x += document.getElementById( "range" ).value/10;
         darth_vader.scale.y += document.getElementById( "range" ).value/10;
-        darth_vader.scale.z += document.getElementById( "range" ).value/10;*/
+        darth_vader.scale.z += document.getElementById( "range" ).value/10;
 
-    };
+    };*/
 
     document.getElementById("corpo").onkeypress = function (e) {
          var keyCode = e.keyCode;
