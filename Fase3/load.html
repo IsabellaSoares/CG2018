@@ -172,6 +172,7 @@
        
         
 		<script>
+        var curves = [];    
         var clock = new THREE.Clock();
         var delta = clock.getDelta(); // seconds.
         var rotateAngle = Math.PI / 2 * delta;   // pi/2 radians (90 degrees) per second
@@ -180,7 +181,16 @@
 			     var mouseX = 0, mouseY = 0; //inicializa a posição do mouse
 			     var windowHalfX = window.innerWidth / 2;
 			     var windowHalfY = window.innerHeight / 2;
-            
+        // direction vector for movement
+        var direction = new THREE.Vector3(1, 0, 0);
+        var up = new THREE.Vector3(0, 0, 1);
+        var axis = new THREE.Vector3();
+        // scalar to simulate speed
+        var speed = 0.5; 
+        var angle = 0;
+        var position = 0;
+        var r2d2 = new THREE.Mesh;
+        var falcon = new THREE.Mesh;    
 init();
 animate();
 function init() {
@@ -298,11 +308,79 @@ function init() {
         });
     });
 
-				renderer = new THREE.WebGLRenderer();
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				container.appendChild( renderer.domElement );
+      // the path
+      curve = new THREE.QuadraticBezierCurve(
+         new THREE.Vector2( -400, 100 ),
+         new THREE.Vector2( -225, -100 ),
+         new THREE.Vector2( -50, 100 )
+        );
+
+        path = new THREE.Path();
+    path.add(curve);
+    
+      var arcRadius = 50;
+     
+
+      drawPath();
+
+      // Start angle and point
+      previousAngle = getAngle( position );
+      previousPoint = path.getPointAt( position );
+    addCurve();
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
      
 }
+      
+function drawPath() {
+  var vertices = path.getSpacedPoints(20);
+
+  // Change 2D points to 3D points
+  for (var i = 0; i < vertices.length; i++) {
+    point = vertices[i]
+    vertices[i] = new THREE.Vector3(point.x, point.y, 0);
+  }
+  var lineGeometry = new THREE.Geometry();
+  lineGeometry.vertices = vertices;
+  var lineMaterial = new THREE.LineBasicMaterial({
+    color: 0xffffff
+  });
+  var line = new THREE.Line(lineGeometry, lineMaterial)
+  scene.add(line);
+}
+
+function move() {
+ 
+  // add up to position for movement
+  position += 0.001;
+
+  // get the point at position
+  var point = path.getPointAt(position);
+    
+  r2d2.position.x = point.x;
+  r2d2.position.y = point.y;
+     
+  var angle = getAngle(position);
+  // set the quaternion
+
+    
+  previousPoint = point;
+  previousAngle = angle;
+
+    
+}
+
+function getAngle( position ){
+// get the 2Dtangent to the curve
+  var tangent = path.getTangent(position).normalize();
+
+  // change tangent to 3D
+  angle = - Math.atan( tangent.x / tangent.y);
+  
+  return angle;
+}
+      
                         
 //Adapta cenário e vizualização de acordo com o tamanho da janela
 function onWindowResize() {
@@ -314,6 +392,7 @@ function onWindowResize() {
 }    
             
 function animate() {
+    move();
     requestAnimationFrame( animate );   
     render();
 }
@@ -346,12 +425,76 @@ function render() {
     }
 
 
-
+    updateCurve();
     //renderização final da câmera
     renderer.render( scene, camera );
                 
 }
+function addCurve() {
+    testPointx = -400;
+    testPointy = 300;
+    testPointz = 0;
+    control1x = -400;
+    control1y = 300;
+    control1z = 0;
+    control2x = -400;
+    control2y = 300;
+    control2z = 0;
+    curve = new THREE.CubicBezierCurve3(
+        new THREE.Vector3( testPointx, testPointy, testPointz ),
+        new THREE.Vector3( control1x, control1y, control1z),
+        new THREE.Vector3( control2x, control2y, control2z ),
+        new THREE.Vector3( -400, 300, 0 )
+    );
+    curveGeometry = new THREE.Geometry();
+    curveGeometry.vertices = curve.getPoints( 50 );
+    curveMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    curveLine = new THREE.Line( curveGeometry, curveMaterial );
+    scene.add(curveLine);
 
+    // EDITED
+    curves.push(curveLine); // Add curve to curves array
+    curveLine.curve = curve; // Link curve object to this curveLine
+}
+
+/**
+ On each frame render, remove the old line, create new curve, geometry and add the new line
+*/
+function updateCurve() {
+    testPointx ++;
+    testPointy ++;
+    control1x =+2;
+    control1y =+2;
+    control1z =+2;
+    control2x ++;
+    control2y ++;
+    control2z ++;
+  // EDITED
+    for (var i = 0, l = curves.length; i < l; i++) {
+    var curveLine = curves[i];
+
+    // Update x value of v0 vector
+    curveLine.curve.v0.x = testPointx;
+    curveLine.curve.v0.y = testPointy;
+    curveLine.curve.v0.z = testPointz; 
+    curveLine.curve.v1.x = control1x;
+    curveLine.curve.v1.y = control1y;
+    curveLine.curve.v1.z = control1z;
+    curveLine.curve.v2.x = control2x;
+    curveLine.curve.v2.y = control2y;
+    curveLine.curve.v2.z = control2z; 
+      
+    // Update vertices
+    curveLine.geometry.vertices = curveLine.curve.getPoints( 50 ); 
+     //for(var j = 0; j < 50; j++){
+         falcon.position.x = curveLine.geometry.vertices[0].x
+         falcon.position.y = curveLine.geometry.vertices[0].y
+         falcon.position.z = curveLine.geometry.vertices[0].z;
+     //}
+    // Let's three.js know that vertices are changed
+    curveLine.geometry.verticesNeedUpdate = true;
+    }
+}
 </script>
 
 <div id="footer">Aperte "barra de espaço" para mudar a posição da câmera</div>
