@@ -1,22 +1,14 @@
 <!-- Adapted from https://bl.ocks.org/chrisbrasington and https://gist.github.com/kylemcdonald/9593057 -->
 <!-- Transformations matrix adapted from https://gist.github.com/jeanlescure/e27c93b73a10b64e85e4 -->
-<!-- Phong by https://github.com/sneha-belkhale/threejs-shader-demo/blob/master/public/html/index_filled.html -->
+<!-- Phong Three.js by https://github.com/sneha-belkhale/threejs-shader-demo/blob/master/public/html/index_filled.html -->
+<!-- Phong script on Death star and Darth Vader adapted https://learnopengl.com/Lighting/Basic-Lighting -->
+
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<title>OBJloader</title>
 		<meta charset="utf-8">
-        
-        <!-- Botões usados na escala do objeto Death Star-->
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-<!--
-        <button id= "ScaleM">Scale + <br>Death Star </button>
-        <button id= "ScaleL">Scale - <br>Death Star </button>
--->
-        <!-- Input Range usado na escala do objeto Vader-->
-     <!--BOTÃO RANGE PAROU DE FUNCIONAR KKKKKKK -->
-<!--     <input id="range" type="range" min="-200" max="230" value="0">-->
-        
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">        
 		<style>
 			body {
 				font-family: Monospace;
@@ -34,41 +26,35 @@
 				z-index: 100;
 				display:block;
 			}
-    
-      /*Definição dos estilos dos botões */			
-   /* #range{
-        position: absolute;
-        bottom: 100px;
-        left: 520px;
-        font-size: 12px;
-        width: 100px;
-    }
-*/
-    #footer { 
-        width:100%;
-        position: absolute;
-        text-align: center;
-        bottom: 1%; 
-    }
-        
+            #footer { 
+                width:100%;
+                position: absolute;
+                text-align: center;
+                bottom: 1%; 
+            }
 		</style>
 	</head>
 
 	<body id = "corpo">
-<div id="info">
-            OBJ loader with ThreeJS
-		</div>
+        <!-- Header da página -->
+        <div id="info">OBJ loader with ThreeJS</div>
         
-<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r61/three.min.js"></script>    
-<script src="../three/three.js"></script>
-<script src="../three/OBJ_loader.js"></script>
-<script src="../three/MTLLoader.js"></script>
-<script src="../three/DDSLoader.js"></script>
+        <!-- Import necessário para uso de recursos do Three.js -->
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r61/three.min.js"></script>    
+        <script src="../three/three.js"></script>
+        <script src="../three/OBJ_loader.js"></script>
+        <script src="../three/MTLLoader.js"></script>
+        <script src="../three/DDSLoader.js"></script>
+        
+        <!-- 
+            Descrição dos Shaders de dois objetos 
+        -->
+        
+        <!-- A cor da luz ambiente será branca vec3 lightColor(1.0f, 1.0f, 1.0f)-->
+        <!-- Descreve Fragment Shader para Death Star (Altera a cor do objeto) -->
+        
         <!-- Descreve vertex shader para Death Star -->    
-        <script id="vertexShaderDS" type="x-shader/x-vertex">
-            varying vec3 vNormal;
-             varying vec3 vViewPosition;
-            uniform float timeDelta;
+        <script id="vertexShaderDS" type="x-shader/x-vertex">        
             //Escalares usados nas matrizes de tranformação
             float translationX = 310.0;
             float translationY = 300.0;
@@ -80,8 +66,13 @@
             //variavel para matriz de tranformação
             varying mat4 mTransformation;
             
+            //variáveis para cor e iluminação
+            varying vec4 CorFinal1;
+            varying vec3 vPos;
+            
             void main()	{
-                
+            
+                //----ROTINAS PARA TRANSLAÇÃO E POSICIONAMENTO
                 // Translação
                 mat4 tPos = mat4(   vec4(1.0, 0.0, 0.0, 0.0),
                                     vec4(0.0, 1.0, 0.0, 0.0),
@@ -96,23 +87,59 @@
                                     
                 //Matriz final de tranformação
                 mTransformation =  tPos * sPos;
-                 
-                //Para Phong 
-                vec3 center = vec3(0.0, 0.0, 0.0);
-                vec3 p = position;
-                float distance = length(center - p);
-                p += sin(distance + timeDelta/1000.0)*0.5;
-                vec4 modelViewPosition = modelViewMatrix * vec4(p, 1.0);
-                vViewPosition = -modelViewPosition.xyz;
-                vNormal = normalMatrix * normal;
-                
+
                 //Aplicação da matriz de tranformação e posicionamento do objeto
-                gl_Position = projectionMatrix * viewMatrix * mTransformation * vec4( position, 1.0 ); 
+                gl_Position = projectionMatrix * viewMatrix * mTransformation * vec4( position, 1.0 );
+                
+                
+                //----ROTINAS PARA ILMUNIAÇÃO
+                
+                //cor do objeto (roxo)
+                vec3 color = vec3(0.153, 0.102, 0.255);
+                
+                //Iluminação ambiente
+                vec3 ambientLight = vec3(1.0, 1.0, 1.0) * 0.5; //valor após vetor define a reflexão (branco)
+                
+                
+                //Iluminação Difusa
+                vec3 lightPos = vec3(300, 300, 150);
+                vec3 diffColor = vec3(0.69, 0.79, 0.87); //azul claro
+                
+                vec4 vertPos4 = viewMatrix * vec4(position, 1.0);
+                vPos = vec3(vertPos4) / vertPos4.w;
+                
+                vec3 normalF = normalize(normal); //tomar cuidado com essa normal, tratar talvez seja necessário
+                vec3 lightDirection = normalize(lightPos - vPos);
+                
+                float diffValue = max( dot(normalF, lightDirection), 0.0); //evita valor negativo de difusão
+                vec3 diffuseLight = diffColor * diffValue * 0.7; //valor no final define a reflexão
+                
+                
+                //Iluminação Especular
+                vec3 camPos = vec3(0, 200, 600);
+                vec3 especColor = vec3(0.85, 0.28, 0.28); //vermelho
+                
+                vec3 camDir = normalize(camPos - vPos);
+                vec3 refDir = reflect(-lightDirection, normalF);
+                
+                float specValue = pow( max( dot(camDir, refDir), 0.0), 16.0); //o valor de expoente define o brilho (sempre em potencia de 2)
+                vec3 specularLight = especColor * specValue * 0.7; //valor no fim define reflexão
+                
+                //cor final para o fragment shader
+                CorFinal1 = vec4(color * (ambientLight + diffuseLight + specularLight), 1.0);
 	        }
-            
         </script>
         
-          <script id="vertexShaderDV" type="x-shader/x-vertex">
+        <script id="fragmentShaderDS" type="x-shader/x-fragment">
+            varying vec4 CorFinal1;
+        
+            void main()	{
+                gl_FragColor = CorFinal1;
+            }
+        </script>
+        
+        <!-- Descreve vertex shader para Darth Vader --> 
+        <script id="vertexShaderDV" type="x-shader/x-vertex">
             
             varying vec3 vNormal;
             varying vec3 vViewPosition;
@@ -129,6 +156,10 @@
         
             //variavel para armazenar matriz final de transformação
             varying mat4 mTransformation;
+            
+            //variáveis para cor e iluminação
+            varying vec4 CorFinal2;
+            varying vec3 vPos;
             
             void main()	{
                 
@@ -155,205 +186,407 @@
                 
                 mTransformation =  tPos * rYPos * sPos;
                 
-                //para Phong
-                vec3 center = vec3(0.0, 0.0, 0.0);
-                vec3 p = position;
-                float distance = length(center - p);
-                p += sin(distance + timeDelta/1000.0)*0.5;
-                vec4 modelViewPosition = modelViewMatrix * vec4(p, 1.0);
-                vViewPosition = -modelViewPosition.xyz;
-                vNormal = normalMatrix * normal;
-                
                 //Aplicação da matriz de tranformação e posicionamento do objeto
                 gl_Position = projectionMatrix * modelViewMatrix * mTransformation * vec4( position, 1.0 );
+                
+                //----ROTINAS PARA ILMUNIAÇÃO
+                
+                //cor do objeto (roxo)
+                vec3 color = vec3(0.25, 0.24, 0.27);
+                
+                //Iluminação ambiente
+                vec3 ambientLight = vec3(1.0, 1.0, 1.0) * 0.7; //valor após vetor define a reflexão (branco)
+                
+                
+                //Iluminação Difusa
+                vec3 lightPos = vec3(300, 300, 150);
+                vec3 diffColor = vec3(0.69, 0.79, 0.87); //azul claro
+                
+                vec4 vertPos4 = viewMatrix * vec4(position, 1.0);
+                vPos = vec3(vertPos4) / vertPos4.w;
+                
+                vec3 normalF = normalize(normal); //tomar cuidado com essa normal, tratar talvez seja necessário
+                vec3 lightDirection = normalize(lightPos - vPos);
+                
+                float diffValue = max( dot(normalF, lightDirection), 0.0); //evita valor negativo de difusão
+                vec3 diffuseLight = diffColor * diffValue * 0.9; //valor no final define a reflexão
+                
+                
+                //Iluminação Especular
+                vec3 camPos = vec3(0, 200, 600);
+                vec3 especColor = vec3(0.85, 0.28, 0.28); //vermelho
+                
+                vec3 camDir = normalize(camPos - vPos);
+                vec3 refDir = reflect(-lightDirection, normalF);
+                
+                float specValue = pow( max( dot(camDir, refDir), 0.0), 16.0); //o valor de expoente define o brilho (sempre em potencia de 2)
+                vec3 specularLight = especColor * specValue * 0.9; //valor no fim define reflexão
+                
+                //cor final para o fragment shader
+                CorFinal2 = vec4(color * (ambientLight + diffuseLight + specularLight), 1.0);
 	        }
         </script>
         
-       
+        <!-- Descreve Fragment Shader para Darth Vader (Altera a cor do objeto) -->
+        <script id="fragmentShaderDV" type="x-shader/x-fragment">
+            varying vec4 CorFinal2;
         
-		<script>
-        var clock = new THREE.Clock();
-        var delta = clock.getDelta(); // seconds.
-        var rotateAngle = Math.PI / 2 * delta;   // pi/2 radians (90 degrees) per second
-			     var container, stats;
-			     var camera, scene, renderer; //necessário para vizualização
-			     var mouseX = 0, mouseY = 0; //inicializa a posição do mouse
-			     var windowHalfX = window.innerWidth / 2;
-			     var windowHalfY = window.innerHeight / 2;
-            
-init();
-animate();
-function init() {
- 
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
-    
-    //Cria camera
-    camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.set(0, 200, 600);
-				
-    //Cria cenário
-				scene = new THREE.Scene();
-    
-
-    //aplica iluminação do cenário e para visualização da cena
-    var ambient = new THREE.AmbientLight( 0x10105a );
-				scene.add( ambient );
-         
-    var light = new THREE.PointLight( 0xa5ccff, 1 );
-    light.position.set(300,300,150);
-    scene.add( light );
-       
-    var directionalLight = new THREE.DirectionalLight( 0xffeedd );
-				directionalLight.position.set(-200, 300, 0 );
-				scene.add( directionalLight );
-
-                
-    var uniforms = ({
-        timeDelta : {type: 'f', value: 0},
-        emissive : {type: 'c', value: new THREE.Color(0x5e807f)},
-        specular : {type: 'c', value: new THREE.Color(0xe09278)}
-    });
-
-
-    var phongShader = THREE.ShaderLib.phong;
-    var mUniforms = THREE.UniformsUtils.merge([phongShader.uniforms, uniforms]);
-
-    //Aplicação dos shaders para Death Star
-    var material_deathstar = new THREE.ShaderMaterial( {
-        uniforms: mUniforms,
-        vertexShader: document.getElementById( 'vertexShaderDS' ).textContent,
-        fragmentShader: phongShader.fragmentShader,
-        lights: true,
-        side : THREE.DoubleSide
-    });
-
-    var loader = new THREE.OBJLoader();
-    loader.load( '../OBJ/DeathStar/deathstar-.obj', function ( object ) {
-        object.traverse( function ( child ) {    
-        if ( child instanceof THREE.Mesh )
-            child.material = material_deathstar;
-
-        });
-        death_star = object;
-
-        scene.add( death_star ); //coloca o objeto na cena
-    } );
-
-
-
-    //Aplicação dos shaders para Death Star
-    var material_darth = new THREE.ShaderMaterial( {
-        uniforms: mUniforms,
-        vertexShader: document.getElementById( 'vertexShaderDV' ).textContent,
-        fragmentShader: phongShader.fragmentShader,
-        lights: true,
-        side : THREE.DoubleSide
-    });   
-
-    var loader = new THREE.OBJLoader();
-    loader.load( '../OBJ/vader.obj', function ( object ) {
-        object.traverse( function ( child ) {    
-        if ( child instanceof THREE.Mesh )
-            child.material = material_darth;
-        });
-        darth_vader = object
-        scene.add( darth_vader );
-    });
-
-    THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader());
-    var mtlLoader = new THREE.MTLLoader();
-    mtlLoader.setPath( '../OBJ/Falcon/' );  
-    mtlLoader.load( 'falcon.mtl', function( materials ) {
-        materials.preload();   
-        var loader = new THREE.OBJLoader();
-        loader.setMaterials( materials );
-        loader.setPath( '../OBJ/Falcon/' );      
-        loader.load( 'falcon.obj', function ( object ) {
-            object.position.set(-450, 350, -300);
-            object.scale.set(0.015, 0.015, 0.015);
-            object.rotation.x = 0.9;
-            object.rotation.y = 1;
-            falcon = object;
-            scene.add( falcon );
-        });
-    });
-
-   
-    THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader());
-    var mtlLoader = new THREE.MTLLoader();
-    mtlLoader.setPath( '../OBJ/RDD2/' );  
-    mtlLoader.load( 'r2-d2.mtl', function( materials ) {
-        materials.preload();
-        var loader = new THREE.OBJLoader();
-        loader.setMaterials( materials );
-        loader.setPath( '../OBJ/RDD2/' );  
-        loader.load( 'r2-d2.obj', function ( object ) {
-            object.position.set(-200, 50, 0);
-            object.scale.set(0.5, 0.5, 0.5);
-            object.rotation.y = 0.3;
-            r2d2 = object;
-            scene.add( r2d2 );
-
-        });
-    });
-
-				renderer = new THREE.WebGLRenderer();
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				container.appendChild( renderer.domElement );
-     
-}
-                        
-//Adapta cenário e vizualização de acordo com o tamanho da janela
-function onWindowResize() {
-    windowHalfX = window.innerWidth / 2;
-    windowHalfY = window.innerHeight / 2;
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-}    
-            
-function animate() {
-    requestAnimationFrame( animate );   
-    render();
-}
-			
-function render() {
-                
-    /* Rotação para Escala Estrela da Morte usando função pronta do three.js */
-    death_star.rotation.y += 0.02;
-
-   /* document.getElementById( "range" ).onchange = function () {
-        darth_vader.scale.x = 55;
-        darth_vader.scale.y = 55;
-        darth_vader.scale.z = 55;
-        darth_vader.scale.x += document.getElementById( "range" ).value/10;
-        darth_vader.scale.y += document.getElementById( "range" ).value/10;
-        darth_vader.scale.z += document.getElementById( "range" ).value/10;
-
-    };*/
-
-    document.getElementById("corpo").onkeypress = function (e) {
-         var keyCode = e.keyCode;
-            if(keyCode == 32) {
-                if (camera.position.x == 0)
-                    camera.position.set(-100, 300, 500);
-                else if (camera.position.x == -100)
-                    camera.position.set(100, 200, 550);
-                else
-                    camera.position.set(0, 200, 600);
+            void main()	{
+                gl_FragColor = CorFinal2;
             }
-    }
+        </script>
+        
+       
+        <!--
+            Descrição do mundo a ser visualizado
+            Inicialização dos passos
+        -->
+        
+        <script>
+            //Declaração de variáveis úteis
+            var curves = [];    
+            var clock = new THREE.Clock();
+            var delta = clock.getDelta(); // seconds.
+            var rotateAngle = Math.PI / 2 * delta; // pi/2 radians (90 degrees) per second
+            var container, stats;
+            var camera, scene, renderer; //necessário para vizualização
+            var mouseX = 0, mouseY = 0; //inicializa a posição do mouse
+            var windowHalfX = window.innerWidth / 2;
+            var windowHalfY = window.innerHeight / 2;
+            
+            // direction vector for movement
+            var direction = new THREE.Vector3(1, 0, 0);
+            var up = new THREE.Vector3(0, 0, 1);
+            var axis = new THREE.Vector3();
+            
+            // scalar to simulate speed
+            var speed = 0.5; 
+            var angle = 0;
+            var position = 0;
+            var r2d2 = new THREE.Mesh;
+            var falcon = new THREE.Mesh;    
 
 
+            //chama das funções que carregam e animam o mundo
+            init();
+            animate();
 
-    //renderização final da câmera
-    renderer.render( scene, camera );
+
+            function init() {
+
+                container = document.createElement( 'div' );
+                document.body.appendChild( container );
+
+                //Cria camera
+                camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+                camera.position.set(0, 200, 600);
+
+                //Cria cenário
+                scene = new THREE.Scene();
+                scene.background = new THREE.TextureLoader().load( '../galaxy_starfield.png' );
+
+                //aplica iluminação do cenário e para visualização da cena
+                //útil para dois objetos sem iluminação definida
+                var ambient = new THREE.AmbientLight( 0x10105a );
+                scene.add( ambient );
                 
-}
+                /*
+                var light = new THREE.PointLight( 0xa5ccff, 1 );
+                light.position.set(300,300,150);
+                scene.add( light );
+                */
+                var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+                directionalLight.position.set(-200, 300, 0 );
+                scene.add( directionalLight );
+            
+                
+                var uniforms = ({
+                    timeDelta : {type: 'f', value: 0},
+                    emissive : {type: 'c', value: new THREE.Color(0x5e807f)},
+                    specular : {type: 'c', value: new THREE.Color(0xe09278)}
+                });
 
-</script>
 
-<div id="footer">Aperte "barra de espaço" para mudar a posição da câmera</div>
-	   </body>
+                var phongShader = THREE.ShaderLib.phong;
+                var mUniforms = THREE.UniformsUtils.merge([phongShader.uniforms, uniforms]);
+
+                //Preparando material para Death Star
+                var material_deathstar = new THREE.ShaderMaterial( {
+                    vertexShader: document.getElementById( 'vertexShaderDS' ).textContent,
+                    fragmentShader: document.getElementById( 'fragmentShaderDS' ).textContent
+                });
+
+                //Carregando a Death Star com aplicação de shader
+                var loader = new THREE.OBJLoader();
+                loader.load( '../OBJ/DeathStar/deathstar-.obj', function ( object ) {
+                    object.traverse( function ( child ) {    
+                    if ( child instanceof THREE.Mesh )
+                        child.material = material_deathstar;
+
+                    });
+                    death_star = object;
+
+                    scene.add( death_star ); //coloca o objeto na cena
+                } );
+
+
+
+                //Preparando material para Darth Vader
+                var material_darth = new THREE.ShaderMaterial( {
+                    uniforms: mUniforms,
+                    vertexShader: document.getElementById( 'vertexShaderDV' ).textContent,
+                    fragmentShader: document.getElementById( 'fragmentShaderDV' ).textContent,
+                    lights: true,
+                    side : THREE.DoubleSide
+                });   
+
+                //Carregando Darth Vader com aplicação de shader
+                var loader = new THREE.OBJLoader();
+                loader.load( '../OBJ/vader.obj', function ( object ) {
+                    object.traverse( function ( child ) {    
+                    if ( child instanceof THREE.Mesh )
+                        child.material = material_darth;
+                    });
+                    darth_vader = object;
+                    scene.add( darth_vader );
+                });
+
+                //Carregando Falcon
+                THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader());
+                var mtlLoader = new THREE.MTLLoader();
+                mtlLoader.setPath( '../OBJ/Falcon/' );  
+                mtlLoader.load( 'falcon.mtl', function( materials ) {
+                    materials.preload();   
+                    var loader = new THREE.OBJLoader();
+                    loader.setMaterials( materials );
+                    loader.setPath( '../OBJ/Falcon/' );      
+                    loader.load( 'falcon.obj', function ( object ) {
+                        object.position.set(-450, 350, -300);
+                        object.scale.set(0.015, 0.015, 0.015);
+                        object.rotation.x = 0.9;
+                        object.rotation.y = 1;
+                        falcon = object;
+                        scene.add( falcon );
+                    });
+                });
+
+
+                //Carregando R2D2
+                THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader());
+                var mtlLoader = new THREE.MTLLoader();
+                mtlLoader.setPath( '../OBJ/RDD2/' );  
+                mtlLoader.load( 'r2-d2.mtl', function( materials ) {
+                    materials.preload();
+                    var loader = new THREE.OBJLoader();
+                    loader.setMaterials( materials );
+                    loader.setPath( '../OBJ/RDD2/' );  
+                    loader.load( 'r2-d2.obj', function ( object ) {
+                        object.position.set(-200, 50, 0);
+                        object.scale.set(0.5, 0.5, 0.5);
+                        object.rotation.y = 0.3;
+                        r2d2 = object;
+                        scene.add( r2d2 );
+
+                    });
+                });
+
+                // the path
+                curve = new THREE.QuadraticBezierCurve(
+                    new THREE.Vector2( -400, 100 ),
+                    new THREE.Vector2( -225, -100 ),
+                    new THREE.Vector2( -50, 100 )
+                );
+
+                path = new THREE.Path();
+                path.add(curve);
+
+                var arcRadius = 50;
+                
+                drawPath();
+
+                // Start angle and point
+                previousAngle = getAngle( position );
+                previousPoint = path.getPointAt( position );
+                addCurve();
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                container.appendChild( renderer.domElement );
+
+            }
+
+            function drawPath() {
+              var vertices = path.getSpacedPoints(20);
+
+              // Change 2D points to 3D points
+              for (var i = 0; i < vertices.length; i++) {
+                point = vertices[i]
+                vertices[i] = new THREE.Vector3(point.x, point.y, 0);
+              }
+                
+              var lineGeometry = new THREE.Geometry();
+              lineGeometry.vertices = vertices;
+              var lineMaterial = new THREE.LineBasicMaterial({
+                color: 0xffffff
+              });
+                
+              var line = new THREE.Line(lineGeometry, lineMaterial)
+              scene.add(line);
+            }
+
+            function move() {
+
+              // add up to position for movement
+              position += 0.001;
+                
+              if (position > 1)
+                  position = 0;
+                
+              // get the point at position
+              var point = path.getPointAt(position);
+
+              r2d2.position.x = point.x;
+              r2d2.position.y = point.y;
+
+              var angle = getAngle(position);
+              // set the quaternion
+                
+              previousPoint = point;
+              previousAngle = angle;
+            }
+
+            function getAngle( position ){
+            // get the 2Dtangent to the curve
+              var tangent = path.getTangent(position).normalize();
+
+              // change tangent to 3D
+              angle = - Math.atan( tangent.x / tangent.y);
+
+              return angle;
+            }
+
+
+            //Adapta cenário e vizualização de acordo com o tamanho da janela
+            function onWindowResize() {
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }    
+
+            function animate() {
+                move();
+                requestAnimationFrame( animate );   
+                render();
+            }
+
+            function render() {
+
+                /* Rotação para Escala Estrela da Morte usando função pronta do three.js */
+                death_star.rotation.y += 0.02;
+                r2d2.rotation.y += 0.1;
+                
+                document.getElementById("corpo").onkeypress = function (e) {
+                     var keyCode = e.keyCode;
+                        if(keyCode == 32) {
+                            if (camera.position.x == 0)
+                                camera.position.set(-100, 200, 500);
+                            else if (camera.position.x == -100)
+                                camera.position.set(100, 200, 500);
+                            else
+                                camera.position.set(0, 600, 600);
+                        }
+                }
+
+
+                updateCurve();
+
+                //renderização final da câmera
+                renderer.render( scene, camera );
+
+
+            }
+
+            function addCurve() {
+                testPointx = -400;
+                testPointy = 300;
+                testPointz = 0;
+                control1x = -400;
+                control1y = 300;
+                control1z = 0;
+                control2x = -400;
+                control2y = 300;
+                control2z = 0;
+                curve = new THREE.CubicBezierCurve3(
+                    new THREE.Vector3( testPointx, testPointy, testPointz ),
+                    new THREE.Vector3( control1x, control1y, control1z),
+                    new THREE.Vector3( control2x, control2y, control2z ),
+                    new THREE.Vector3( -400, 300, 0 )
+                );
+                curveGeometry = new THREE.Geometry();
+                curveGeometry.vertices = curve.getPoints( 50 );
+                curveMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+                curveLine = new THREE.Line( curveGeometry, curveMaterial );
+                scene.add(curveLine);
+
+                // EDITED
+                curves.push(curveLine); // Add curve to curves array
+                curveLine.curve = curve; // Link curve object to this curveLine
+            }
+
+            /**
+             On each frame render, remove the old line, create new curve, geometry and add the new line
+            */
+            function updateCurve() {
+                
+                if (testPointx < window.innerWidth && testPointy < window.innerHeight) {
+                    testPointx ++;
+                    testPointy ++;
+                    control1x =+2;
+                    control1y =+2;
+                    control1z =+2;
+                    control2x ++;
+                    control2y ++;
+                    control2z ++;
+                  // EDITED
+                    for (var i = 0, l = curves.length; i < l; i++) {
+                    var curveLine = curves[i];
+
+                    // Update x value of v0 vector
+                    curveLine.curve.v0.x = testPointx;
+                    curveLine.curve.v0.y = testPointy;
+                    curveLine.curve.v0.z = testPointz; 
+                    curveLine.curve.v1.x = control1x;
+                    curveLine.curve.v1.y = control1y;
+                    curveLine.curve.v1.z = control1z;
+                    curveLine.curve.v2.x = control2x;
+                    curveLine.curve.v2.y = control2y;
+                    curveLine.curve.v2.z = control2z; 
+
+                    // Update vertices
+                    curveLine.geometry.vertices = curveLine.curve.getPoints( 50 ); 
+                     //for(var j = 0; j < 50; j++){
+                         falcon.position.x = curveLine.geometry.vertices[0].x
+                         falcon.position.y = curveLine.geometry.vertices[0].y
+                         falcon.position.z = curveLine.geometry.vertices[0].z;
+                     //}
+                    // Let's three.js know that vertices are changed
+                        curveLine.geometry.verticesNeedUpdate = true;
+                    }
+                } else {
+                    testPointx = -400;
+                    testPointy = 300;
+                    testPointz = 0;
+                    control1x = -400;
+                    control1y = 300;
+                    control1z = 0;
+                    control2x = -400;
+                    control2y = 300;
+                    control2z = 0;
+                }
+            }
+        </script>
+
+        <div id="footer">Aperte "barra de espaço" para mudar a posição da câmera</div>
+    </body>
 </html>
