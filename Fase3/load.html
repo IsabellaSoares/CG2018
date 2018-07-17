@@ -1,6 +1,8 @@
 <!-- Adapted from https://bl.ocks.org/chrisbrasington and https://gist.github.com/kylemcdonald/9593057 -->
 <!-- Transformations matrix adapted from https://gist.github.com/jeanlescure/e27c93b73a10b64e85e4 -->
-<!-- Phong by https://github.com/sneha-belkhale/threejs-shader-demo/blob/master/public/html/index_filled.html -->
+<!-- Phong Three.js by https://github.com/sneha-belkhale/threejs-shader-demo/blob/master/public/html/index_filled.html -->
+<!-- Phong script on Death star and Darth Vader adapted https://learnopengl.com/Lighting/Basic-Lighting -->
+
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -48,11 +50,11 @@
             Descrição dos Shaders de dois objetos 
         -->
         
+        <!-- A cor da luz ambiente será branca vec3 lightColor(1.0f, 1.0f, 1.0f)-->
+        <!-- Descreve Fragment Shader para Death Star (Altera a cor do objeto) -->
+        
         <!-- Descreve vertex shader para Death Star -->    
-        <script id="vertexShaderDS" type="x-shader/x-vertex">
-            varying vec3 vNormal;
-            varying vec3 vViewPosition;
-            uniform float timeDelta;
+        <script id="vertexShaderDS" type="x-shader/x-vertex">        
             //Escalares usados nas matrizes de tranformação
             float translationX = 310.0;
             float translationY = 300.0;
@@ -64,8 +66,13 @@
             //variavel para matriz de tranformação
             varying mat4 mTransformation;
             
+            //variáveis para cor e iluminação
+            varying vec4 CorFinal1;
+            varying vec3 vPos;
+            
             void main()	{
-                
+            
+                //----ROTINAS PARA TRANSLAÇÃO E POSICIONAMENTO
                 // Translação
                 mat4 tPos = mat4(   vec4(1.0, 0.0, 0.0, 0.0),
                                     vec4(0.0, 1.0, 0.0, 0.0),
@@ -80,19 +87,55 @@
                                     
                 //Matriz final de tranformação
                 mTransformation =  tPos * sPos;
-                 
-                //Para Phong 
-                vec3 center = vec3(0.0, 0.0, 0.0);
-                vec3 p = position;
-                float distance = length(center - p);
-                p += sin(distance + timeDelta/1000.0)*0.5;
-                vec4 modelViewPosition = modelViewMatrix * vec4(p, 1.0);
-                vViewPosition = -modelViewPosition.xyz;
-                vNormal = normalMatrix * normal;
-                
+
                 //Aplicação da matriz de tranformação e posicionamento do objeto
-                gl_Position = projectionMatrix * viewMatrix * mTransformation * vec4( position, 1.0 ); 
+                gl_Position = projectionMatrix * viewMatrix * mTransformation * vec4( position, 1.0 );
+                
+                
+                //----ROTINAS PARA ILMUNIAÇÃO
+                
+                //cor do objeto (roxo)
+                vec3 color = vec3(0.153, 0.102, 0.255);
+                
+                //Iluminação ambiente
+                vec3 ambientLight = vec3(1.0, 1.0, 1.0) * 0.5; //valor após vetor define a reflexão (branco)
+                
+                
+                //Iluminação Difusa
+                vec3 lightPos = vec3(300, 300, 150);
+                vec3 diffColor = vec3(0.69, 0.79, 0.87); //azul claro
+                
+                vec4 vertPos4 = viewMatrix * vec4(position, 1.0);
+                vPos = vec3(vertPos4) / vertPos4.w;
+                
+                vec3 normalF = normalize(normal); //tomar cuidado com essa normal, tratar talvez seja necessário
+                vec3 lightDirection = normalize(lightPos - vPos);
+                
+                float diffValue = max( dot(normalF, lightDirection), 0.0); //evita valor negativo de difusão
+                vec3 diffuseLight = diffColor * diffValue * 0.7; //valor no final define a reflexão
+                
+                
+                //Iluminação Especular
+                vec3 camPos = vec3(0, 200, 600);
+                vec3 especColor = vec3(0.85, 0.28, 0.28); //vermelho
+                
+                vec3 camDir = normalize(camPos - vPos);
+                vec3 refDir = reflect(-lightDirection, normalF);
+                
+                float specValue = pow( max( dot(camDir, refDir), 0.0), 16.0); //o valor de expoente define o brilho (sempre em potencia de 2)
+                vec3 specularLight = especColor * specValue * 0.7; //valor no fim define reflexão
+                
+                //cor final para o fragment shader
+                CorFinal1 = vec4(color * (ambientLight + diffuseLight + specularLight), 1.0);
 	        }
+        </script>
+        
+        <script id="fragmentShaderDS" type="x-shader/x-fragment">
+            varying vec4 CorFinal1;
+        
+            void main()	{
+                gl_FragColor = CorFinal1;
+            }
         </script>
         
         <!-- Descreve vertex shader para Darth Vader --> 
@@ -113,6 +156,10 @@
         
             //variavel para armazenar matriz final de transformação
             varying mat4 mTransformation;
+            
+            //variáveis para cor e iluminação
+            varying vec4 CorFinal2;
+            varying vec3 vPos;
             
             void main()	{
                 
@@ -139,18 +186,54 @@
                 
                 mTransformation =  tPos * rYPos * sPos;
                 
-                //para Phong
-                vec3 center = vec3(0.0, 0.0, 0.0);
-                vec3 p = position;
-                float distance = length(center - p);
-                p += sin(distance + timeDelta/1000.0)*0.5;
-                vec4 modelViewPosition = modelViewMatrix * vec4(p, 1.0);
-                vViewPosition = -modelViewPosition.xyz;
-                vNormal = normalMatrix * normal;
-                
                 //Aplicação da matriz de tranformação e posicionamento do objeto
                 gl_Position = projectionMatrix * modelViewMatrix * mTransformation * vec4( position, 1.0 );
+                
+                //----ROTINAS PARA ILMUNIAÇÃO
+                
+                //cor do objeto (roxo)
+                vec3 color = vec3(0.25, 0.24, 0.27);
+                
+                //Iluminação ambiente
+                vec3 ambientLight = vec3(1.0, 1.0, 1.0) * 0.7; //valor após vetor define a reflexão (branco)
+                
+                
+                //Iluminação Difusa
+                vec3 lightPos = vec3(300, 300, 150);
+                vec3 diffColor = vec3(0.69, 0.79, 0.87); //azul claro
+                
+                vec4 vertPos4 = viewMatrix * vec4(position, 1.0);
+                vPos = vec3(vertPos4) / vertPos4.w;
+                
+                vec3 normalF = normalize(normal); //tomar cuidado com essa normal, tratar talvez seja necessário
+                vec3 lightDirection = normalize(lightPos - vPos);
+                
+                float diffValue = max( dot(normalF, lightDirection), 0.0); //evita valor negativo de difusão
+                vec3 diffuseLight = diffColor * diffValue * 0.9; //valor no final define a reflexão
+                
+                
+                //Iluminação Especular
+                vec3 camPos = vec3(0, 200, 600);
+                vec3 especColor = vec3(0.85, 0.28, 0.28); //vermelho
+                
+                vec3 camDir = normalize(camPos - vPos);
+                vec3 refDir = reflect(-lightDirection, normalF);
+                
+                float specValue = pow( max( dot(camDir, refDir), 0.0), 16.0); //o valor de expoente define o brilho (sempre em potencia de 2)
+                vec3 specularLight = especColor * specValue * 0.9; //valor no fim define reflexão
+                
+                //cor final para o fragment shader
+                CorFinal2 = vec4(color * (ambientLight + diffuseLight + specularLight), 1.0);
 	        }
+        </script>
+        
+        <!-- Descreve Fragment Shader para Darth Vader (Altera a cor do objeto) -->
+        <script id="fragmentShaderDV" type="x-shader/x-fragment">
+            varying vec4 CorFinal2;
+        
+            void main()	{
+                gl_FragColor = CorFinal2;
+            }
         </script>
         
        
@@ -203,9 +286,11 @@
 
 
                 //aplica iluminação do cenário e para visualização da cena
+                //útil para dois objetos sem iluminação definida
                 var ambient = new THREE.AmbientLight( 0x10105a );
                 scene.add( ambient );
-
+                
+                /*
                 var light = new THREE.PointLight( 0xa5ccff, 1 );
                 light.position.set(300,300,150);
                 scene.add( light );
@@ -213,8 +298,8 @@
                 var directionalLight = new THREE.DirectionalLight( 0xffeedd );
                 directionalLight.position.set(-200, 300, 0 );
                 scene.add( directionalLight );
-
-
+                */
+                
                 var uniforms = ({
                     timeDelta : {type: 'f', value: 0},
                     emissive : {type: 'c', value: new THREE.Color(0x5e807f)},
@@ -227,11 +312,8 @@
 
                 //Preparando material para Death Star
                 var material_deathstar = new THREE.ShaderMaterial( {
-                    uniforms: mUniforms,
                     vertexShader: document.getElementById( 'vertexShaderDS' ).textContent,
-                    fragmentShader: phongShader.fragmentShader,
-                    lights: true,
-                    side : THREE.DoubleSide
+                    fragmentShader: document.getElementById( 'fragmentShaderDS' ).textContent
                 });
 
                 //Carregando a Death Star com aplicação de shader
@@ -253,7 +335,7 @@
                 var material_darth = new THREE.ShaderMaterial( {
                     uniforms: mUniforms,
                     vertexShader: document.getElementById( 'vertexShaderDV' ).textContent,
-                    fragmentShader: phongShader.fragmentShader,
+                    fragmentShader: document.getElementById( 'fragmentShaderDV' ).textContent,
                     lights: true,
                     side : THREE.DoubleSide
                 });   
