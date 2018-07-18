@@ -107,6 +107,7 @@
                 vPos = vec3(vertPos4) / vertPos4.w;
                 
                 vec3 normalF = normalize(normal); //tomar cuidado com essa normal, tratar talvez seja necessário
+                //vec3 normalF = normalize(normalMatrix * normal); //tomar cuidado com essa normal, tratar talvez seja necessário
                 vec3 lightDirection = normalize(lightPos - vPos);
                 
                 float diffValue = max( dot(normalF, lightDirection), 0.0); //evita valor negativo de difusão
@@ -115,13 +116,13 @@
                 
                 //Iluminação Especular
                 vec3 camPos = vec3(0, 200, 600);
-                vec3 especColor = vec3(0.85, 0.28, 0.28); //vermelho
+                vec3 especColor = vec3(1.0, 1.0, 1.0); //branco
                 
                 vec3 camDir = normalize(camPos - vPos);
                 vec3 refDir = reflect(-lightDirection, normalF);
                 
-                float specValue = pow( max( dot(camDir, refDir), 0.0), 16.0); //o valor de expoente define o brilho (sempre em potencia de 2)
-                vec3 specularLight = especColor * specValue * 0.7; //valor no fim define reflexão
+                float specValue = pow( max( dot(camDir, refDir), 0.0), 4.0); //o valor de expoente define o specular
+                vec3 specularLight = especColor * specValue * 1.5; //valor no fim define reflexão
                 
                 //cor final para o fragment shader
                 CorFinal1 = vec4(color * (ambientLight + diffuseLight + specularLight), 1.0);
@@ -188,16 +189,16 @@
                 
                 //----ROTINAS PARA ILMUNIAÇÃO
                 
-                //cor do objeto (roxo)
-                vec3 color = vec3(0.25, 0.24, 0.27);
+                //cor do objeto (roxo próximo ao cinza)
+                vec3 color = vec3(0.28, 0.27, 0.3);
                 
                 //Iluminação ambiente
-                vec3 ambientLight = vec3(1.0, 1.0, 1.0) * 0.7; //valor após vetor define a reflexão (branco)
+                vec3 ambientLight = vec3(1.0, 1.0, 1.0) * 0.3; //valor após vetor define a reflexão (branco)
                 
                 
                 //Iluminação Difusa
                 vec3 lightPos = vec3(300, 300, 150);
-                vec3 diffColor = vec3(0.69, 0.79, 0.87); //azul claro
+                vec3 diffColor = vec3(0.62, 0.73, 0.7); //azul muito claro
                 
                 vec4 vertPos4 = viewMatrix * vec4(position, 1.0);
                 vPos = vec3(vertPos4) / vertPos4.w;
@@ -206,18 +207,18 @@
                 vec3 lightDirection = normalize(lightPos - vPos);
                 
                 float diffValue = max( dot(normalF, lightDirection), 0.0); //evita valor negativo de difusão
-                vec3 diffuseLight = diffColor * diffValue * 0.9; //valor no final define a reflexão
+                vec3 diffuseLight = diffColor * diffValue * 0.7; //valor no final define a reflexão
                 
                 
                 //Iluminação Especular
                 vec3 camPos = vec3(0, 200, 600);
-                vec3 especColor = vec3(0.85, 0.28, 0.28); //vermelho
+                vec3 especColor = vec3(0.37, 0.22, 0.61); //Roxo
                 
                 vec3 camDir = normalize(camPos - vPos);
                 vec3 refDir = reflect(-lightDirection, normalF);
                 
-                float specValue = pow( max( dot(camDir, refDir), 0.0), 16.0); //o valor de expoente define o brilho (sempre em potencia de 2)
-                vec3 specularLight = especColor * specValue * 0.9; //valor no fim define reflexão
+                float specValue = pow( max( dot(camDir, refDir), 0.0), 8.0); //o valor de expoente define o brilho (sempre em potencia de 2)
+                vec3 specularLight = especColor * specValue * 3.0; //valor no fim define reflexão
                 
                 //cor final para o fragment shader
                 CorFinal2 = vec4(color * (ambientLight + diffuseLight + specularLight), 1.0);
