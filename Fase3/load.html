@@ -261,7 +261,10 @@
             var angle = 0;
             var position = 0;
             var r2d2 = new THREE.Mesh;
-            var falcon = new THREE.Mesh;    
+            var falcon = new THREE.Mesh;
+            var curvePath;
+            var position1 = 0;
+            //var death_star = new THREE.Mesh;
             //chama das funções que carregam e animam o mundo
             init();
             animate();
@@ -453,84 +456,83 @@
                                 camera.position.set(0, 600, 600);
                         }
                 }
-                updateCurve();
+                //updateCurve();
+                moveFalcon();
                 //renderização final da câmera
                 renderer.render( scene, camera );
             }
-            function addCurve() {
-                testPointx = -400;
-                testPointy = 300;
-                testPointz = 0;
-                control1x = -400;
-                control1y = 300;
-                control1z = 0;
-                control2x = -400;
-                control2y = 300;
-                control2z = 0;
-                curve = new THREE.CubicBezierCurve3(
-                    new THREE.Vector3( testPointx, testPointy, testPointz ),
-                    new THREE.Vector3( control1x, control1y, control1z),
-                    new THREE.Vector3( control2x, control2y, control2z ),
-                    new THREE.Vector3( -400, 300, 0 )
-                );
-                curveGeometry = new THREE.Geometry();
-                curveGeometry.vertices = curve.getPoints( 50 );
-                curveMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-                curveLine = new THREE.Line( curveGeometry, curveMaterial );
-                scene.add(curveLine);
-                // EDITED
-                curves.push(curveLine); // Add curve to curves array
-                curveLine.curve = curve; // Link curve object to this curveLine
-            }
-            /**
-             On each frame render, remove the old line, create new curve, geometry and add the new line
-            */
-            function updateCurve() {
-                
-                if (testPointx < window.innerWidth && testPointy < window.innerHeight) {
-                    testPointx ++;
-                    testPointy ++;
-                    control1x =+2;
-                    control1y =+2;
-                    control1z =+2;
-                    control2x ++;
-                    control2y ++;
-                    control2z ++;
-                  // EDITED
-                    for (var i = 0, l = curves.length; i < l; i++) {
-                    var curveLine = curves[i];
-                    // Update x value of v0 vector
-                    curveLine.curve.v0.x = testPointx;
-                    curveLine.curve.v0.y = testPointy;
-                    curveLine.curve.v0.z = testPointz; 
-                    curveLine.curve.v1.x = control1x;
-                    curveLine.curve.v1.y = control1y;
-                    curveLine.curve.v1.z = control1z;
-                    curveLine.curve.v2.x = control2x;
-                    curveLine.curve.v2.y = control2y;
-                    curveLine.curve.v2.z = control2z; 
-                    // Update vertices
-                    curveLine.geometry.vertices = curveLine.curve.getPoints( 50 ); 
-                     //for(var j = 0; j < 50; j++){
-                         falcon.position.x = curveLine.geometry.vertices[0].x
-                         falcon.position.y = curveLine.geometry.vertices[0].y
-                         falcon.position.z = curveLine.geometry.vertices[0].z;
-                     //}
-                    // Let's three.js know that vertices are changed
-                        curveLine.geometry.verticesNeedUpdate = true;
-                    }
-                } else {
-                    testPointx = -400;
-                    testPointy = 300;
-                    testPointz = 0;
-                    control1x = -400;
-                    control1y = 300;
-                    control1z = 0;
-                    control2x = -400;
-                    control2y = 300;
-                    control2z = 0;
-                }
-            }
+         
+function addCurve() {
+    testPointx = -400;
+    testPointy = 300;
+    testPointz = 0;
+    control1x = -500;
+    control1y = -300;
+    control1z = 0;
+    control2x = 1500;
+    control2y = 0;
+    control2z = -100;
+ /*  testPointx = -400;
+    testPointy = 300;
+    testPointz = 0;
+    control1x = -400;
+    control1y = 300;
+    control1z = 0;
+    control2x = -400;
+    control2y = 300;
+    control2z = 0; */
+    curve = new THREE.CubicBezierCurve3(
+        new THREE.Vector3( testPointx, testPointy, testPointz ),
+        new THREE.Vector3( control1x, control1y, control1z),
+        new THREE.Vector3( control2x, control2y, control2z ),
+        new THREE.Vector3( -300, 400, -300 )
+    );
+   
+    
+    // EDITED
+    curvePath = new THREE.CurvePath();
+    curvePath.add(curve);
+    
+  // curves.push(curveLine); // Add curve to curves array
+  //  curveLine.curve = curve; // Link curve object to this curveLine
+  //  updateCurve();
+    
+}
+
+/**
+ On each frame render, remove the old line, create new curve, geometry and add the new line
+*/
+//
+            
+function updateCurve(position1) {
+    var p = curvePath.getPointAt(position1);
+
+    var vert = curvePath.getPoints( 50);
+    curveGeometry = new THREE.Geometry();
+    for(var j = 0; j < vert.length ; j++ ){
+        curveGeometry.vertices[j] = vert[j];  
+        
+    }
+  
+    curveMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    curveLine = new THREE.Line( curveGeometry, curveMaterial );
+    scene.add(curveLine);
+    
+   
+}
+function moveFalcon() {
+    position1 += 0.001;
+    if(position1 > 1 ){
+        position1 = 0;
+    }
+    var point = curvePath.getPointAt(position1);
+     falcon.position.x = point.x
+     falcon.position.y = point.y
+     falcon.position.z = point.z;
+ 
+    updateCurve(position1);
+}           
+           
         </script>
 
         <div id="footer">Aperte "barra de espaço" para mudar a posição da câmera</div>
