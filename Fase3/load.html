@@ -243,11 +243,15 @@
             var position = 0;
             var r2d2 = new THREE.Mesh;
             var falcon = new THREE.Mesh;
+
             var storm = new THREE.Mesh;
             var sphere = new THREE.Mesh;
             var curvePath;
             var position1 = 0;
             var death_star;
+            var curvePath;
+            var position1 = 0;
+
             //var death_star = new THREE.Mesh;
             //chama das funções que carregam e animam o mundo
             init();
@@ -509,27 +513,29 @@
                             
                         }
                 }
-                updateCurve();
+                //updateCurve();
+                moveFalcon();
                 //renderização final da câmera
                 renderer.render( scene, camera );
             }
          
 function addCurve() {
-    testPointx = -600;
-    testPointy = 400;
-    testPointz = -300;
-    control1x = -300;
-    control1y = -200;
-    control1z = -300;
-    control2x = 100;
-    control2y = 100;
-    control2z = -100;
 
+    testPointx = -400;
+    testPointy = 300;
+    testPointz = 0;
+    control1x = -500;
+    control1y = -300;
+    control1z = 0;
+    control2x = 1500;
+    control2y = 0;
+    control2z = -100;
+ 
     curve = new THREE.CubicBezierCurve3(
         new THREE.Vector3( testPointx, testPointy, testPointz ),
         new THREE.Vector3( control1x, control1y, control1z),
         new THREE.Vector3( control2x, control2y, control2z ),
-        new THREE.Vector3( 0, 400, -300 )
+        new THREE.Vector3( -300, 400, -300 )
     );
    
     
@@ -565,8 +571,7 @@ function updateCurve(position1) {
    
 }
 function moveFalcon() {
-    
-    position1 += 0.0009;
+    position1 += 0.001;
     if(position1 > 1 ){
         position1 = 0;
     }
@@ -579,6 +584,7 @@ function moveFalcon() {
 }           
            
         </script>
+
         <div id="footer">Aperte "barra de espaço" para trocar de cena!
         <br>
         Aperte 1 e 2 para trocar de câmera!
