@@ -45,6 +45,10 @@
         <script src="../three/OBJ_loader.js"></script>
         <script src="../three/MTLLoader.js"></script>
         <script src="../three/DDSLoader.js"></script>
+        <script src="../three/FBXLoader.js"></script>
+        <script src="../three/inflate.min.js"></script>
+        <script src="../three/ColladaLoader.js"></script>
+        
         
         <!-- 
             Descrição dos Shaders de dois objetos 
@@ -55,16 +59,7 @@
         
         <!-- Descreve vertex shader para Death Star -->    
         <script id="vertexShaderDS" type="x-shader/x-vertex">        
-            //Escalares usados nas matrizes de tranformação
-            float translationX = 310.0;
-            float translationY = 300.0;
-            float translationZ = -150.0;
-            float scaleX = 0.3;
-            float scaleY = 0.3;
-            float scaleZ = 0.3;
             
-            //variavel para matriz de tranformação
-            varying mat4 mTransformation;
             
             //variáveis para cor e iluminação
             varying vec4 CorFinal1;
@@ -72,25 +67,9 @@
             
             void main()	{
             
-                //----ROTINAS PARA TRANSLAÇÃO E POSICIONAMENTO
-                // Translação
-                mat4 tPos = mat4(   vec4(1.0, 0.0, 0.0, 0.0),
-                                    vec4(0.0, 1.0, 0.0, 0.0),
-                                    vec4(0.0, 0.0, 1.0, 0.0),
-                                    vec4(translationX, translationY, translationZ, 1.0));
-                //Escala
-                mat4 sPos = mat4(   vec4(scaleX, 0.0, 0.0, 0.0),
-                                    vec4(0.0, scaleY, 0.0, 0.0),
-                                    vec4(0.0, 0.0, scaleZ, 0.0),
-                                    vec4(0.0, 0.0, 0.0, 1.0));
-                                    
-                //Matriz final de tranformação
-                mTransformation =  tPos * sPos;
-                //Aplicação da matriz de tranformação e posicionamento do objeto
-                gl_Position = projectionMatrix * viewMatrix * mTransformation * vec4( position, 1.0 );
-                
-                
-                //----ROTINAS PARA ILMUNIAÇÃO
+                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+                 
+                //----ROTINAS PARA ILUMINAÇÃO
                 
                 //cor do objeto (roxo)
                 vec3 color = vec3(0.153, 0.102, 0.255);
@@ -107,6 +86,7 @@
                 vPos = vec3(vertPos4) / vertPos4.w;
                 
                 vec3 normalF = normalize(normal); //tomar cuidado com essa normal, tratar talvez seja necessário
+                //vec3 normalF = normalize(normalMatrix * normal); //tomar cuidado com essa normal, tratar talvez seja necessário
                 vec3 lightDirection = normalize(lightPos - vPos);
                 
                 float diffValue = max( dot(normalF, lightDirection), 0.0); //evita valor negativo de difusão
@@ -115,13 +95,13 @@
                 
                 //Iluminação Especular
                 vec3 camPos = vec3(0, 200, 600);
-                vec3 especColor = vec3(0.85, 0.28, 0.28); //vermelho
+                vec3 especColor = vec3(1.0, 1.0, 1.0); //branco
                 
                 vec3 camDir = normalize(camPos - vPos);
                 vec3 refDir = reflect(-lightDirection, normalF);
                 
-                float specValue = pow( max( dot(camDir, refDir), 0.0), 16.0); //o valor de expoente define o brilho (sempre em potencia de 2)
-                vec3 specularLight = especColor * specValue * 0.7; //valor no fim define reflexão
+                float specValue = pow( max( dot(camDir, refDir), 0.0), 4.0); //o valor de expoente define o specular
+                vec3 specularLight = especColor * specValue * 1.5; //valor no fim define reflexão
                 
                 //cor final para o fragment shader
                 CorFinal1 = vec4(color * (ambientLight + diffuseLight + specularLight), 1.0);
@@ -186,18 +166,18 @@
                 //Aplicação da matriz de tranformação e posicionamento do objeto
                 gl_Position = projectionMatrix * modelViewMatrix * mTransformation * vec4( position, 1.0 );
                 
-                //----ROTINAS PARA ILMUNIAÇÃO
+                //----ROTINAS PARA ILUMINAÇÃO
                 
-                //cor do objeto (roxo)
-                vec3 color = vec3(0.25, 0.24, 0.27);
+                //cor do objeto (roxo próximo ao cinza)
+                vec3 color = vec3(0.28, 0.27, 0.3);
                 
                 //Iluminação ambiente
-                vec3 ambientLight = vec3(1.0, 1.0, 1.0) * 0.7; //valor após vetor define a reflexão (branco)
+                vec3 ambientLight = vec3(1.0, 1.0, 1.0) * 0.3; //valor após vetor define a reflexão (branco)
                 
                 
                 //Iluminação Difusa
                 vec3 lightPos = vec3(300, 300, 150);
-                vec3 diffColor = vec3(0.69, 0.79, 0.87); //azul claro
+                vec3 diffColor = vec3(0.62, 0.73, 0.7); //azul muito claro
                 
                 vec4 vertPos4 = viewMatrix * vec4(position, 1.0);
                 vPos = vec3(vertPos4) / vertPos4.w;
@@ -206,18 +186,18 @@
                 vec3 lightDirection = normalize(lightPos - vPos);
                 
                 float diffValue = max( dot(normalF, lightDirection), 0.0); //evita valor negativo de difusão
-                vec3 diffuseLight = diffColor * diffValue * 0.9; //valor no final define a reflexão
+                vec3 diffuseLight = diffColor * diffValue * 0.7; //valor no final define a reflexão
                 
                 
                 //Iluminação Especular
                 vec3 camPos = vec3(0, 200, 600);
-                vec3 especColor = vec3(0.85, 0.28, 0.28); //vermelho
+                vec3 especColor = vec3(0.37, 0.22, 0.61); //Roxo
                 
                 vec3 camDir = normalize(camPos - vPos);
                 vec3 refDir = reflect(-lightDirection, normalF);
                 
-                float specValue = pow( max( dot(camDir, refDir), 0.0), 16.0); //o valor de expoente define o brilho (sempre em potencia de 2)
-                vec3 specularLight = especColor * specValue * 0.9; //valor no fim define reflexão
+                float specValue = pow( max( dot(camDir, refDir), 0.0), 8.0); //o valor de expoente define o brilho (sempre em potencia de 2)
+                vec3 specularLight = especColor * specValue * 3.0; //valor no fim define reflexão
                 
                 //cor final para o fragment shader
                 CorFinal2 = vec4(color * (ambientLight + diffuseLight + specularLight), 1.0);
@@ -250,6 +230,7 @@
             var mouseX = 0, mouseY = 0; //inicializa a posição do mouse
             var windowHalfX = window.innerWidth / 2;
             var windowHalfY = window.innerHeight / 2;
+            var mixer, mixer1;
             
             // direction vector for movement
             var direction = new THREE.Vector3(1, 0, 0);
@@ -261,7 +242,13 @@
             var angle = 0;
             var position = 0;
             var r2d2 = new THREE.Mesh;
-            var falcon = new THREE.Mesh;    
+            var falcon = new THREE.Mesh;
+            var storm = new THREE.Mesh;
+            var sphere = new THREE.Mesh;
+            var curvePath;
+            var position1 = 0;
+            var death_star;
+            //var death_star = new THREE.Mesh;
             //chama das funções que carregam e animam o mundo
             init();
             animate();
@@ -270,7 +257,7 @@
                 document.body.appendChild( container );
                 //Cria camera
                 camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
-                camera.position.set(0, 200, 600);
+                camera.position.set(0, 200, 700);
                 //Cria cenário
                 scene = new THREE.Scene();
                 scene.background = new THREE.TextureLoader().load( '../galaxy_starfield.png' );
@@ -309,6 +296,8 @@
                         child.material = material_deathstar;
                     });
                     death_star = object;
+                    death_star.scale.set(0.4, 0.4, 0.4);
+                    death_star.position.set(290.0, 350.0, -210.0);
                     scene.add( death_star ); //coloca o objeto na cena
                 } );
                 //Preparando material para Darth Vader
@@ -340,9 +329,9 @@
                     loader.setPath( '../OBJ/Falcon/' );      
                     loader.load( 'falcon.obj', function ( object ) {
                         object.position.set(-450, 350, -300);
-                        object.scale.set(0.015, 0.015, 0.015);
+                        object.scale.set(0.003, 0.003, 0.003);
                         object.rotation.x = 0.9;
-                        object.rotation.y = 1;
+                        object.rotation.y = 1.2;
                         falcon = object;
                         scene.add( falcon );
                     });
@@ -364,6 +353,54 @@
                         scene.add( r2d2 );
                     });
                 });
+                
+                var loader = new THREE.ColladaLoader();
+                loader.load( '../stormtrooper.dae', function ( collada ) {
+                 var animations = collada.animations;
+                 var avatar = collada.scene;
+                    window.referenceModel = collada.scene.children[0];
+                 mixer = new THREE.AnimationMixer( avatar );
+                var action = mixer.clipAction( animations[ 0 ] ).play();
+               
+                scene.add( avatar );
+                storm = avatar;
+                storm.position.set(660, 100, -200);
+                storm.scale.set(5.0, 5.0, 5.0); 
+                storm.rotation.z = 3.0;
+                          
+                } );
+               
+                //achar maneira mais inteligente de clonar
+                
+                loader.load( '../stormtrooper.dae', function ( collada ) {
+                var animations = collada.animations;
+                var avatar = collada.scene;
+                window.referenceModel = collada.scene.children[0];
+                mixer1 = new THREE.AnimationMixer( avatar );
+                var action = mixer1.clipAction( animations[ 0 ] ).play();
+               
+                scene.add( avatar );
+                storm = avatar;
+                storm.position.set(680, 100, -200);
+                storm.scale.set(5.0, 5.0, 5.0); 
+                storm.rotation.z = 3.0;
+                          
+                } );
+               
+                var texture = new THREE.TextureLoader().load( "../OBJ/sand2.jpg" );
+                texture.wrapS = THREE.RepeatWrapping;
+                texture.wrapT = THREE.RepeatWrapping;
+                texture.repeat.set( 20, 20 );
+                //adicionando planeta maior 
+                var geometry = new THREE.SphereGeometry( 5, 32, 32 );
+                var material = new THREE.MeshBasicMaterial( {map: texture} );
+                sphere = new THREE.Mesh( geometry, material );
+                sphere.position.set(780, -500, -700);
+                sphere.scale.set(150, 150, 150);
+                scene.add( sphere );
+                
+   
+                
                 // the path
                 curve = new THREE.QuadraticBezierCurve(
                     new THREE.Vector2( -400, 100 ),
@@ -382,6 +419,8 @@
                 renderer = new THREE.WebGLRenderer();
                 renderer.setSize( window.innerWidth, window.innerHeight );
                 container.appendChild( renderer.domElement );
+                
+                
             }
             function drawPath() {
               var vertices = path.getSpacedPoints(20);
@@ -435,104 +474,114 @@
             function animate() {
                 move();
                 requestAnimationFrame( animate );   
+               
                 render();
             }
             function render() {
                 /* Rotação para Escala Estrela da Morte usando função pronta do three.js */
-                death_star.rotation.y += 0.02;
+                var delta = clock.getDelta();
+				            if ( mixer !== undefined ) {
+					               mixer.update( delta );
+				            }
+                 if ( mixer1 !== undefined ) {
+					               mixer1.update( delta );
+				            }
+                death_star.rotation.y += 0.009;
                 r2d2.rotation.y += 0.1;
+                moveFalcon();
                 
-                document.getElementById("corpo").onkeypress = function (e) {
-                     var keyCode = e.keyCode;
-                        if(keyCode == 32) {
-                            if (camera.position.x == 0)
-                                camera.position.set(-100, 200, 500);
-                            else if (camera.position.x == -100)
-                                camera.position.set(100, 200, 500);
-                            else
-                                camera.position.set(0, 600, 600);
+              document.getElementById("corpo").onkeypress = function (e) {
+                        var keyCode = e.keyCode;
+                        if(keyCode == 49) {
+                            camera.position.x = falcon.position.x;
+                            camera.position.y = falcon.position.y;
+                            camera.position.z = falcon.position.z + 300;
+                        } else if (keyCode == 50) {
+                            camera.position.set(500, 320, 550);                  
+                        } else if (keyCode == 32) {
+                            if (camera.position.z == -100) {
+                                cena1 = 1;
+                                cena2 = 0;
+                                camera.position.set(0, 200, 700);
+                            } else {
+                                camera.position.set(650, 100, -100);
+                            }
+                            
                         }
                 }
                 updateCurve();
                 //renderização final da câmera
                 renderer.render( scene, camera );
             }
-            function addCurve() {
-                testPointx = -400;
-                testPointy = 300;
-                testPointz = 0;
-                control1x = -400;
-                control1y = 300;
-                control1z = 0;
-                control2x = -400;
-                control2y = 300;
-                control2z = 0;
-                curve = new THREE.CubicBezierCurve3(
-                    new THREE.Vector3( testPointx, testPointy, testPointz ),
-                    new THREE.Vector3( control1x, control1y, control1z),
-                    new THREE.Vector3( control2x, control2y, control2z ),
-                    new THREE.Vector3( -400, 300, 0 )
-                );
-                curveGeometry = new THREE.Geometry();
-                curveGeometry.vertices = curve.getPoints( 50 );
-                curveMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
-                curveLine = new THREE.Line( curveGeometry, curveMaterial );
-                scene.add(curveLine);
-                // EDITED
-                curves.push(curveLine); // Add curve to curves array
-                curveLine.curve = curve; // Link curve object to this curveLine
-            }
-            /**
-             On each frame render, remove the old line, create new curve, geometry and add the new line
-            */
-            function updateCurve() {
-                
-                if (testPointx < window.innerWidth && testPointy < window.innerHeight) {
-                    testPointx ++;
-                    testPointy ++;
-                    control1x =+2;
-                    control1y =+2;
-                    control1z =+2;
-                    control2x ++;
-                    control2y ++;
-                    control2z ++;
-                  // EDITED
-                    for (var i = 0, l = curves.length; i < l; i++) {
-                    var curveLine = curves[i];
-                    // Update x value of v0 vector
-                    curveLine.curve.v0.x = testPointx;
-                    curveLine.curve.v0.y = testPointy;
-                    curveLine.curve.v0.z = testPointz; 
-                    curveLine.curve.v1.x = control1x;
-                    curveLine.curve.v1.y = control1y;
-                    curveLine.curve.v1.z = control1z;
-                    curveLine.curve.v2.x = control2x;
-                    curveLine.curve.v2.y = control2y;
-                    curveLine.curve.v2.z = control2z; 
-                    // Update vertices
-                    curveLine.geometry.vertices = curveLine.curve.getPoints( 50 ); 
-                     //for(var j = 0; j < 50; j++){
-                         falcon.position.x = curveLine.geometry.vertices[0].x
-                         falcon.position.y = curveLine.geometry.vertices[0].y
-                         falcon.position.z = curveLine.geometry.vertices[0].z;
-                     //}
-                    // Let's three.js know that vertices are changed
-                        curveLine.geometry.verticesNeedUpdate = true;
-                    }
-                } else {
-                    testPointx = -400;
-                    testPointy = 300;
-                    testPointz = 0;
-                    control1x = -400;
-                    control1y = 300;
-                    control1z = 0;
-                    control2x = -400;
-                    control2y = 300;
-                    control2z = 0;
-                }
-            }
-        </script>
+         
+function addCurve() {
+    testPointx = -600;
+    testPointy = 400;
+    testPointz = -300;
+    control1x = -300;
+    control1y = -200;
+    control1z = -300;
+    control2x = 100;
+    control2y = 100;
+    control2z = -100;
 
-        <div id="footer">Aperte "barra de espaço" para mudar a posição da câmera</div>
+    curve = new THREE.CubicBezierCurve3(
+        new THREE.Vector3( testPointx, testPointy, testPointz ),
+        new THREE.Vector3( control1x, control1y, control1z),
+        new THREE.Vector3( control2x, control2y, control2z ),
+        new THREE.Vector3( 0, 400, -300 )
+    );
+   
+    
+    // EDITED
+    curvePath = new THREE.CurvePath();
+    curvePath.add(curve);
+    
+  // curves.push(curveLine); // Add curve to curves array
+  //  curveLine.curve = curve; // Link curve object to this curveLine
+  //  updateCurve();
+    
+}
+
+/**
+ On each frame render, remove the old line, create new curve, geometry and add the new line
+*/
+//
+            
+function updateCurve(position1) {
+    var p = curvePath.getPointAt(position1);
+
+    var vert = curvePath.getPoints( 50);
+    curveGeometry = new THREE.Geometry();
+    for(var j = 0; j < vert.length ; j++ ){
+        curveGeometry.vertices[j] = vert[j];  
+        
+    }
+  
+    curveMaterial = new THREE.LineBasicMaterial( { color : 0xff0000 } );
+    curveLine = new THREE.Line( curveGeometry, curveMaterial );
+    scene.add(curveLine);
+    
+   
+}
+function moveFalcon() {
+    
+    position1 += 0.0009;
+    if(position1 > 1 ){
+        position1 = 0;
+    }
+    var point = curvePath.getPointAt(position1);
+     falcon.position.x = point.x
+     falcon.position.y = point.y
+     falcon.position.z = point.z;
+ 
+    updateCurve(position1);
+}           
+           
+        </script>
+        <div id="footer">Aperte "barra de espaço" para trocar de cena!
+        <br>
+        Aperte 1 e 2 para trocar de câmera!
+        </div>
     </body>
 </html>
