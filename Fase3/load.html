@@ -65,8 +65,10 @@
             //variáveis para cor e iluminação
             varying vec4 CorFinal1;
             varying vec3 vPos;
-            
-            void main()	{
+            varying vec2 vUv;
+
+            void main() {
+                vUv = uv;
             
                 gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
                  
@@ -111,9 +113,13 @@
         
         <script id="fragmentShaderDS" type="x-shader/x-fragment">
             varying vec4 CorFinal1;
+            uniform sampler2D texture1;
+            varying vec2 vUv;
+
         
             void main()	{
-                gl_FragColor = CorFinal1;
+                gl_FragColor = texture2D(texture1, vUv);
+                //gl_FragColor = CorFinal1;
             }
         </script>
         
@@ -253,6 +259,10 @@
             var curvePath;
             var position1 = 0;
 
+            var cena1 = 0;
+            var cena2 = 0;
+            var cena3 = 0;
+            
             //var death_star = new THREE.Mesh;
             //chama das funções que carregam e animam o mundo
             init();
@@ -284,16 +294,21 @@
                 var uniforms = ({
                     timeDelta : {type: 'f', value: 0},
                     emissive : {type: 'c', value: new THREE.Color(0x5e807f)},
-                    specular : {type: 'c', value: new THREE.Color(0xe09278)}
+                    specular : {type: 'c', value: new THREE.Color(0xe09278)},
+                    texture1 : { type: "t", value: new THREE.TextureLoader().load( "../OBJ/DeathStar/ds2.jpg") }
                 });
+    
                 var phongShader = THREE.ShaderLib.phong;
                 var mUniforms = THREE.UniformsUtils.merge([phongShader.uniforms, uniforms]);
+                
                 //Preparando material para Death Star
                 var material_deathstar = new THREE.ShaderMaterial( {
+                    uniforms: uniforms,
                     vertexShader: document.getElementById( 'vertexShaderDS' ).textContent,
                     fragmentShader: document.getElementById( 'fragmentShaderDS' ).textContent
                 });
                 //Carregando a Death Star com aplicação de shader
+
                 var loader = new THREE.OBJLoader();
                 loader.load( '../OBJ/DeathStar/deathstar-.obj', function ( object ) {
                     object.traverse( function ( child ) {    
@@ -378,7 +393,7 @@
                           
                 } );
                
-                //achar maneira mais inteligente de clonar
+                //adicionando segundo stormtropper
                 
                 loader.load( '../stormtrooper.dae', function ( collada ) {
                 var animations = collada.animations;
@@ -395,7 +410,7 @@
                           
                 } );
                
-                var texture = new THREE.TextureLoader().load( "../OBJ/sand2.jpg" );
+                var texture = new THREE.TextureLoader().load( "../OBJ/map.jpg" );
                 texture.wrapS = THREE.RepeatWrapping;
                 texture.wrapT = THREE.RepeatWrapping;
                 texture.repeat.set( 20, 20 );
@@ -486,6 +501,7 @@
                 render();
             }
             function render() {
+                
                 /* Rotação para Escala Estrela da Morte usando função pronta do three.js */
                 var delta = clock.getDelta();
 				            if ( mixer !== undefined ) {
@@ -513,22 +529,31 @@
               document.getElementById("corpo").onkeypress = function (e) {
                         var keyCode = e.keyCode;
                         if(keyCode == 49) {
-                            camera.position.x = falcon.position.x;
-                            camera.position.y = falcon.position.y;
-                            camera.position.z = falcon.position.z + 300;
+                            cena1 = 1;
+                            cena2 = 0;
+                            cena3 = 0;
                         } else if (keyCode == 50) {
-                            camera.position.set(500, 320, 550);                  
+                            cena2 = 1;
+                            cena1 = 0;
+                            cena3 = 0;
                         } else if (keyCode == 32) {
+                            cena1 = 0;
+                            cena2 = 0;
+                            cena3 = 1;
                             if (camera.position.z == -100) {
-                                cena1 = 1;
-                                cena2 = 0;
                                 camera.position.set(0, 200, 700);
                             } else {
                                 camera.position.set(650, 100, -100);
                             }
-                            
                         }
                 }
+                
+                if (cena1 == 1) {
+                    camera.position.set(falcon.position.x, falcon.position.y, falcon.position.z + 120);
+                } else if (cena2 == 1) {
+                    camera.position.set(death_star.position.x, death_star.position.y + 120, death_star.position.z + 400);                  
+                }
+              
                 //updateCurve();
                 moveFalcon();
                 //renderização final da câmera
@@ -608,7 +633,7 @@ function moveFalcon() {
 
         <div id="footer">Aperte "barra de espaço" para trocar de cena!
         <br>
-        Aperte 1 e 2 para trocar de câmera!
-        </div>
+            Aperte "1" ou "2" para trocar de câmera!
+     </div>
     </body>
 </html>
