@@ -49,6 +49,7 @@
         <script src="../three/inflate.min.js"></script>
         <script src="../three/ColladaLoader.js"></script>
         
+        <audio autoplay="autoplay" loop><source src="../audio/TheImperialMarch.mp3" type="audio/mpeg" /></audio>
         
         <!-- 
             Descrição dos Shaders de dois objetos 
@@ -300,8 +301,8 @@
                         child.material = material_deathstar;
                     });
                     death_star = object;
-                    death_star.scale.set(0.4, 0.4, 0.4);
-                    death_star.position.set(290.0, 350.0, -210.0);
+                    death_star.scale.set(0.3, 0.3, 0.3);
+                    death_star.position.set(0.0, 200.0, -100.0);
                     scene.add( death_star ); //coloca o objeto na cena
                 } );
                 //Preparando material para Darth Vader
@@ -320,6 +321,8 @@
                         child.material = material_darth;
                     });
                     darth_vader = object;
+                     darth_vader.scale.set(0.8, 0.8, 0.8);
+                    darth_vader.position.set(0.0, 200.0, -100.0);
                     scene.add( darth_vader );
                 });
                 //Carregando Falcon
@@ -333,8 +336,8 @@
                     loader.setPath( '../OBJ/Falcon/' );      
                     loader.load( 'falcon.obj', function ( object ) {
                         object.position.set(-450, 350, -300);
-                        object.scale.set(0.003, 0.003, 0.003);
-                        object.rotation.x = 0.9;
+                        object.scale.set(0.005, 0.005, 0.005);
+                        object.rotation.x = 0.5;
                         object.rotation.y = 1.2;
                         falcon = object;
                         scene.add( falcon );
@@ -351,8 +354,9 @@
                     loader.setPath( '../OBJ/RDD2/' );  
                     loader.load( 'r2-d2.obj', function ( object ) {
                         object.position.set(-200, 50, 0);
-                        object.scale.set(0.5, 0.5, 0.5);
-                        object.rotation.y = 0.3;
+                        object.scale.set(0.3, 0.3, 0.3);
+                        object.rotation.x = 0.5;
+                        object.rotation.y = 1.2;
                         r2d2 = object;
                         scene.add( r2d2 );
                     });
@@ -415,7 +419,7 @@
                 path.add(curve);
                 var arcRadius = 50;
                 
-                drawPath();
+              //  drawPath();
                 // Start angle and point
                 previousAngle = getAngle( position );
                 previousPoint = path.getPointAt( position );
@@ -491,8 +495,20 @@
 					               mixer1.update( delta );
 				            }
                 death_star.rotation.y += 0.009;
-                r2d2.rotation.y += 0.1;
+                darth_vader.position.x = death_star.position.x;
+                darth_vader.position.y = death_star.position.y;
+                darth_vader.position.z = death_star.position.z;
+                r2d2.position.x = falcon.position.x;
+                r2d2.position.y = falcon.position.y;
+                r2d2.position.z = falcon.position.z - 20;
+                darth_vader.rotation.y += 0.009;
+                falcon.rotation.y += 0.0077;
+                r2d2.rotation.y += 0.0077;
+                
                 moveFalcon();
+                
+               // r2d2.rotation.y += 0.1;
+                
                 
               document.getElementById("corpo").onkeypress = function (e) {
                         var keyCode = e.keyCode;
@@ -521,21 +537,21 @@
          
 function addCurve() {
 
-    testPointx = -400;
-    testPointy = 300;
-    testPointz = 0;
-    control1x = -500;
-    control1y = -300;
-    control1z = 0;
-    control2x = 1500;
-    control2y = 0;
-    control2z = -100;
+    testPointx = -450;
+    testPointy = 350;
+    testPointz = -250;
+    control1x = -450;
+    control1y = -550;
+    control1z = 750;
+    control2x = 1550;
+    control2y = 550;
+    control2z = -450;
  
     curve = new THREE.CubicBezierCurve3(
         new THREE.Vector3( testPointx, testPointy, testPointz ),
         new THREE.Vector3( control1x, control1y, control1z),
         new THREE.Vector3( control2x, control2y, control2z ),
-        new THREE.Vector3( -300, 400, -300 )
+        new THREE.Vector3( -430, 355, -260 )
     );
    
     
@@ -571,7 +587,7 @@ function updateCurve(position1) {
    
 }
 function moveFalcon() {
-    position1 += 0.001;
+    position1 += 0.00062;
     if(position1 > 1 ){
         position1 = 0;
     }
@@ -579,7 +595,12 @@ function moveFalcon() {
      falcon.position.x = point.x
      falcon.position.y = point.y
      falcon.position.z = point.z;
- 
+    var pointEnd = curvePath.getPointAt(0);
+    if(falcon.position.x == pointEnd.x && falcon.position.y == pointEnd.y && falcon.position.z == pointEnd.z){
+        falcon.rotation.y = 1.2;
+    }
+    
+    
     updateCurve(position1);
 }           
            
