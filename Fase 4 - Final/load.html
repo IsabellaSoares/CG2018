@@ -260,7 +260,8 @@
             //posicionamento da camera
             var cena1 = 0;
             var cena2 = 0;
-            var cena3 = 0;
+            var cena3 = 1;
+            var cena4 = 0;
 
             //chama das funções que carregam e animam o mundo
             init();
@@ -536,25 +537,49 @@
                 
                 //mundança da câmera por botões
                 document.getElementById("corpo").onkeypress = function (e) {
-                        var keyCode = e.keyCode;
-                        if(keyCode == 49) {
-                            cena1 = 1;
-                            cena2 = 0;
-                            cena3 = 0;
-                        } else if (keyCode == 50) {
-                            cena2 = 1;
-                            cena1 = 0;
-                            cena3 = 0;
-                        } else if (keyCode == 32) { //alterna entre cenas
-                            cena1 = 0;
-                            cena2 = 0;
+                    var keyCode = e.keyCode;
+                    if(keyCode == 49) {
+                        cena1 = 1;
+                        cena2 = 0;
+                        cena3 = 0;
+                        cena4 = 0;
+                    } else if (keyCode == 50) {
+                        cena2 = 1;
+                        cena1 = 0;
+                        cena3 = 0;
+                    } else if (keyCode == 32) { //alterna entre cenas
+                        cena1 = 0;
+                        cena2 = 0;
+                        if (camera.position.z == -100) {
                             cena3 = 1;
-                            if (camera.position.z == -100) {
-                                camera.position.set(0, 200, 700);
-                            } else {
-                                camera.position.set(650, 100, -100);
-                            }
+                            cena4 = 0;
+                            camera.position.set(0, 200, 700);
+                        } else {
+                            cena3 = 0;
+                            cena4 = 1;
+                            camera.position.set(650, 100, -100);
                         }
+                    }
+                }
+                
+                //função de scroll
+                document.getElementById("corpo").onmousewheel = function (e) {
+                    if(cena3 == 1){
+                        var y = e.deltaY;
+                        if(y > 0){
+                            if( (camera.position.z + y) > 700){
+                                camera.position.z = 700;
+                            }else{
+                                camera.position.z += y;  
+                            }
+                        }else if(y < 0){
+                            if((camera.position.z + y) < 400){
+                                camera.position.z = 400;
+                            }else{
+                                camera.position.z += y;  
+                            }    
+                        }
+                    }
                 }
                 
                 //alteração da cena para botões 1 e 2
@@ -646,6 +671,8 @@
             Aperte "barra de espaço" para trocar de cena!
             <br>
             Aperte "1" ou "2" para trocar de câmera!
+            <br>
+            Para a cena com todos os objetos, use scroll do mouse para zoom!
         </div>
     </body>
 </html>
